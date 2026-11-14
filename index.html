@@ -19,6 +19,8 @@
   --accent: #f2a33a; --accent-ink: #15170f; --flare: #e8603a;
   --t-prime: #f2a33a; --t-strong: #9ccb5e; --t-viable: #cfc48a; --t-low: #7d8070;
   --p-water: #5aa9e6; --p-remote: #f2a33a; --p-room: #9ccb5e; --p-shelter: #dc8463; --p-resupply: #b596e6; --p-obtain: #d8d3bd;
+  --p-safety: #e6d15a; --p-public: #46b58c;
+  --l-fs: #4f9f5a; --l-blm: #c9a94f; --l-nps: #9a82e0; --l-fws: #4aa9b0; --l-state: #86c2a0;
   --c-escheat: #f06292; --c-gov_surplus: #a98be8; --c-tax_sale: #f59a4a; --c-estate_owner: #62a8f2;
   --c-land_bank: #3fc4b2; --c-tax_delinquent: #b9be6a;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -72,7 +74,7 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 .picks button small { display: block; font-family: var(--sans); font-weight: 400; letter-spacing: 0; font-size: 11.5px; color: var(--muted); }
 .picks button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .picks button[aria-pressed="true"] small { color: var(--accent-ink); }
-.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .kpi { background: var(--panel); border: 1px solid var(--line); border-top: 2px solid var(--line); border-radius: 3px; padding: 9px 12px; min-width: 0; }
 .kpi.hot { border-top-color: var(--accent); }
 .kpi b { display: block; font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
@@ -84,6 +86,17 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 .seg button, .base button { border-radius: 0; background: var(--panel); }
 .seg button[aria-pressed="true"], .base button[aria-pressed="true"] { background: var(--accent); }
 .seg button + button, .base button + button { border-left: 0; }
+.mapbar { display: contents; }
+.hz { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 2px; white-space: nowrap; }
+.hz.hi { background: var(--flare); color: var(--accent-ink); }
+.hz.el { border: 1px solid var(--flare); color: var(--ink); font-weight: 500; }
+.sp { position: relative; }
+#sp-list { list-style: none; margin: 2px 0 0; padding: 0; position: absolute; left: 0; right: 0; z-index: 30; background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 3px; max-height: 240px; overflow-y: auto; }
+#sp-list li { padding: 6px 9px; cursor: pointer; }
+#sp-list li:hover, #sp-list li:focus { background: var(--accent); color: var(--accent-ink); outline: none; }
+.homepin { background: var(--accent); border: 2px solid #0b0d08; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+#map.picking { cursor: crosshair; }
 .legend { position: absolute; left: 10px; bottom: 10px; z-index: 500; background: rgba(25, 29, 20, 0.92); border: 1px solid var(--line);
   border-radius: 3px; padding: 6px 9px; font-size: 11.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: calc(100% - 20px); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
@@ -161,6 +174,10 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   #f-toggle { display: inline-block !important; }
   main { overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .picks { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .picks button { flex: none; }
+  .seg, .base { position: static; }
+  .mapbar { position: absolute; top: 10px; left: 54px; right: 10px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; }
   .mapwrap { height: 62vh; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
@@ -844,11 +861,24 @@ svg.leaflet-image-layer.leaflet-interactive path {
   </div>
   <p class="tag">Remote ground with water, shelter and a way to buy it.</p>
   <p><span id="total"></span> sites scored &middot; <span id="nsrc"></span> public county lists &middot; built <span id="built"></span><span id="capnote"></span></p>
-  <button id="f-toggle" aria-expanded="false" hidden>Filters</button>
+  <button id="f-toggle" aria-expanded="false" hidden>Set start &amp; filters</button>
   <span id="offline" hidden>Offline: outlines only. Street map, photos and links need signal.</span>
 </header>
 <div class="shell">
   <aside>
+    <section>
+      <h2>Start from</h2>
+      <div class="stack">
+        <div class="sp"><input type="search" id="sp-q" placeholder="Your town, e.g. Denver, CO" autocomplete="off" aria-label="Starting town">
+          <ul id="sp-list" hidden></ul></div>
+        <div class="row"><button id="sp-pick">Pick on map</button><button id="sp-geo" hidden>Use my location</button><button id="sp-clear" hidden>Clear</button></div>
+        <p class="note" id="sp-now">Set where you would be leaving from. Sites are then ranked by distance, and any whose direct line crosses a big city are flagged. Your starting point stays in this browser.</p>
+        <label class="fl" for="f-reach">Within reach<select id="f-reach" disabled>
+          <option value="0" selected>Any distance</option><option value="100">100 miles</option><option value="200">200 miles</option>
+          <option value="300">300 miles (about one tank)</option><option value="500">500 miles</option></select></label>
+        <label class="row"><input type="checkbox" id="f-cross" disabled> <span>Skip sites behind a major city</span></label>
+      </div>
+    </section>
     <section>
       <h2>Where</h2>
       <div class="stack">
@@ -871,6 +901,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <label class="fl" for="f-dist">Distance from a city of 50,000+<select id="f-dist">
           <option value="0" selected>Any distance</option><option value="25">25+ miles out</option>
           <option value="50">50+ miles out</option><option value="100">100+ miles out</option></select></label>
+        <label class="fl" for="f-pub">Public land next door<select id="f-pub">
+          <option value="-1" selected>Any</option><option value="400">Borders it (within &frac14; mile)</option>
+          <option value="1609">Within 1 mile</option><option value="3219">Within 2 miles</option></select></label>
+        <label class="fl" for="f-haz">Natural hazards in the county<select id="f-haz">
+          <option value="9" selected>Any</option><option value="1">No hazard rated high</option>
+          <option value="0">None rated high or elevated</option></select></label>
+        <label class="fl" for="f-nuke">Distance from a nuclear plant<select id="f-nuke">
+          <option value="0" selected>Any distance</option><option value="25">25+ miles</option>
+          <option value="50">50+ miles</option><option value="100">100+ miles</option></select></label>
         <label class="fl" for="f-bldg">Shelter on the land<select id="f-bldg">
           <option value="any" selected>Any</option><option value="house">House-sized building (500+ sq ft)</option>
           <option value="some">Any building</option><option value="none">No building detected (raw land)</option>
@@ -898,7 +937,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <section>
       <h2>How the score works</h2>
       <div class="key" id="key"></div>
-      <p class="note" style="margin-top:10px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Not in the score, because no national data exists for it here: parcel size, soil and growing season, legal road access, flood and wildfire risk, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.</p>
+      <p class="note" style="margin-top:10px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil and growing season, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.</p>
     </section>
   </aside>
   <main>
@@ -906,21 +945,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <button data-pick="deep" aria-pressed="false">Deep cover<small>50+ mi out, water in &frac12; mile</small></button>
       <button data-pick="ready" aria-pressed="false">Move-in ready<small>Building + water in &frac12; mile</small></button>
       <button data-pick="raw" aria-pressed="false">Raw land<small>No building, water, 25+ mi out</small></button>
+      <button data-pick="pub" aria-pressed="false">Backs onto public land<small>Forest, BLM or park in &frac14; mile</small></button>
+      <button data-pick="safe" aria-pressed="false">Low hazard<small>No high hazards, 50+ mi from a reactor</small></button>
       <button data-pick="easy" aria-pressed="false">Easiest to get<small>Government already holds it</small></button>
     </div>
     <div class="kpis">
       <div class="kpi hot"><b id="k-n">0</b><span>sites match</span></div>
       <div class="kpi"><b id="k-prime" style="color:var(--t-prime)">0</b><span>prime (score 80+)</span></div>
       <div class="kpi"><b id="k-water">0</b><span>with water in &frac12; mile</span></div>
+      <div class="kpi"><b id="k-pub">0</b><span>next to public land</span></div>
       <div class="kpi"><b id="k-far">0</b><span>50+ miles from a city</span></div>
     </div>
     <div class="mapwrap">
       <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading sites…</p></div>
+      <div class="mapbar">
       <div class="base" role="group" aria-label="Basemap" id="base" hidden>
         <button id="b-st" aria-pressed="true">Streets</button><button id="b-ae" aria-pressed="false">Aerial</button>
+        <button id="b-pub" aria-pressed="false" style="margin-left:6px">Public land</button>
       </div>
       <div class="seg" role="group" aria-label="Map style">
         <button id="m-heat" aria-pressed="true">Heat map</button><button id="m-pts" aria-pressed="false">Sites</button>
+      </div>
       </div>
       <div class="legend" id="legend"></div>
     </div>
@@ -928,7 +973,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="lhead">
         <h2>Sites in map view &middot; <span id="l-n" style="color:var(--ink)">0</span></h2>
         <select id="l-sort" aria-label="Sort sites"><option value="score">Best bug-out score</option>
-          <option value="water">Closest to water</option><option value="far">Farthest from a city</option>
+          <option value="water">Closest to water</option><option value="far">Farthest from a city</option><option value="near" id="o-near" disabled>Closest to my start</option>
           <option value="lead">Easiest to get</option></select>
         <button id="l-prev" aria-label="Previous page">&lsaquo;</button><span class="n" id="l-pg"></span>
         <button id="l-next" aria-label="Next page">&rsaquo;</button>
@@ -937,7 +982,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div class="warn" id="bldg-banner" style="margin-top:8px" hidden></div>
       <div class="tw" style="margin-top:8px"><table>
-        <thead><tr><th>Score</th><th id="th-pic" hidden>Photo</th><th>Site</th><th>Water</th><th>Shelter (est.)</th><th>From cities</th><th>How to get it</th><th>Coordinates</th></tr></thead>
+        <thead><tr><th>Score</th><th id="th-pic" hidden>Photo</th><th>Site</th><th>Water &amp; public land</th><th>Hazards</th><th>Shelter (est.)</th><th>Cities<span id="th-you" hidden> &amp; you</span></th><th>How to get it</th><th>Coordinates</th></tr></thead>
         <tbody id="rows"></tbody>
       </table></div>
     </section>
@@ -961,12 +1006,16 @@ const CATS = D.cats;                       // ways a site could be acquired, in 
 // row: [0 lat, 1 lon, 2 bugOutScore, 3 catMask, 4 flags, 5 address, 6 owner, 7 fips, 8 amountOwed, 9 layerIdx, 10 oid,
 //       11 status, 12 parcel, 13 listAge10, 14 setting, 15 townIdx, 16 waterMeters (-1 none within a mile), 17 waterIdx,
 //       18 buildingSqft (-1 unchecked), 19 score parts (one char each, code-48), 20 milesToCity50k, 21 cityIdx,
-//       22 countyPeoplePerSqMi (-1 unknown), 23 leadScore]
+//       22 countyPeoplePerSqMi (-1 unknown), 23 leadScore, 24 hazard levels (one digit per D.hazards: 0 none, 1 elevated, 2 high),
+//       25 milesToNuclearPlant, 26 plantNameIdx, 27 milesToMilitaryBase, 28 baseNameIdx,
+//       29 publicLandMeters (-1 none within 2 miles), 30 publicLandNameIdx, 31 publicLandKind (index into D.kinds)]
 const R = D.rows, PAGE = 25;
 const SETTING = ['Rural', 'Small town', 'Urban'];
-const PART_LABEL = {water: 'Water', remote: 'Remoteness', room: 'Elbow room', shelter: 'Shelter', resupply: 'Resupply', obtain: 'Obtainable'};
-const PART_HELP = {water: 'perennial fresh water within a mile', remote: 'miles from cities of 50k and 250k+', room: 'few people per square mile',
-  shelter: 'a building already standing', resupply: 'a town within 12 miles', obtain: 'a public-record path to buy it'};
+const PART_LABEL = {water: 'Water', remote: 'Remoteness', safety: 'Safety', room: 'Elbow room', shelter: 'Shelter', public: 'Public land',
+  resupply: 'Resupply', obtain: 'Obtainable'};
+const PART_HELP = {water: 'perennial fresh water within a mile', remote: 'miles from cities of 50k and 250k+',
+  safety: 'few natural hazards, no reactor or big base nearby', room: 'few people per square mile', shelter: 'a building already standing',
+  public: 'forest, BLM or park land next door', resupply: 'a town within 12 miles', obtain: 'a public-record path to buy it'};
 const ST = {};  TOPO.objects.states.geometries.forEach(g => ST[g.id] = g.properties.name);
 const CO = {};  TOPO.objects.counties.geometries.forEach(g => CO[g.id] = g.properties.name);
 const ABBR = D.abbr;
@@ -989,6 +1038,16 @@ const parts = r => Array.from(r[19], c => c.charCodeAt(0) - 48);
 const bar = r => `<div class="bar" title="${D.parts.map((p, k) => PART_LABEL[p] + ' ' + parts(r)[k] + '/' + D.part_max[k]).join(' · ')}">${
   parts(r).map((v, k) => `<i style="width:${v}%;background:var(--p-${D.parts[k]})"></i>`).join('')}</div>`;
 const water = r => r[16] < 0 ? '' : (r[16] === 0 ? 'On ' : miles(r[16]) + ' to ') + D.waters[r[17]];
+const hazMax = r => { let m = 0; for (const c of r[24]) if (+c > m) m = +c; return m; };
+const hazChips = r => {
+  const out = [];
+  D.hazards.forEach((h, k) => { const v = +r[24][k]; if (v) out.push(`<span class="hz ${v === 2 ? 'hi' : 'el'}">${h}${v === 2 ? ': high' : ''}</span>`); });
+  if (r[25] <= 50) out.push(`<span class="hz ${r[25] <= 25 ? 'hi' : 'el'}">Reactor ${r[25]} mi</span>`);
+  if (r[27] <= 10) out.push(`<span class="hz el">Military base ${r[27]} mi</span>`);
+  return out.length ? `<div class="chips">${out.join('')}</div>` : '<span class="s">none flagged</span>';
+};
+const pubName = r => { const n = D.names[r[30]], k = D.kinds[r[31]] || 'public land'; return !n || /^Bureau of Land/.test(n) ? k : n; };
+const pub = r => r[29] < 0 ? '' : (r[29] <= 100 ? 'Borders ' : miles(r[29]) + ' to ') + pubName(r);
 const far = r => `${fmt(r[20])} mi from ${D.bigs[r[21]] || 'a city'}`;
 const dens = r => r[22] < 0 ? '' : (r[22] < 1 ? 'under 1 person' : fmt(r[22]) + (r[22] === 1 ? ' person' : ' people')) + ' per sq mi in county';
 // r[18]: footprint (sq ft) of the largest building centred within 50 m of the point; 0 none; -1 not checked
@@ -1050,8 +1109,6 @@ function marker(i) {
   }
   return markers[i];
 }
-$('legend').innerHTML = [['prime', 'Prime 80+'], ['strong', 'Strong 65+'], ['viable', 'Viable 50+'], ['low', 'Marginal']]
-  .map(([k, t]) => `<span><i class="dot" style="background:var(--t-${k})"></i>${t}</span>`).join('');
 $('key').innerHTML = D.parts.map((p, k) => `<i class="sw" style="background:var(--p-${p})"></i><span><span style="color:var(--ink)">${PART_LABEL[p]}</span>: ${PART_HELP[p]}</span><b>${D.part_max[k]}</b>`).join('');
 const getChips = r => CATS.filter((c, k) => r[3] & (1 << k)).map(c => `<span class="chip" style="background:var(--c-${c.id})">${esc(c.label)}</span>`).join('')
   + ((r[4] & 1) && !(r[3] & estateBit) ? '<span class="chip o">Estate / heirs on title</span>' : '')
@@ -1066,6 +1123,9 @@ function popup(i) {
     <div class="top"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span><div class="s">bug-out score out of 100</div></span></div>
     <div class="brk">${D.parts.map((p, k) => `<span>${PART_LABEL[p]}</span><span class="trk"><i style="width:${ps[k] / D.part_max[k] * 100}%;background:var(--p-${p})"></i></span><span class="pt">${ps[k]}/${D.part_max[k]}</span>`).join('')}</div>
     <dl><dt>Water</dt><dd>${esc(water(r)) || 'None mapped within a mile'}</dd>
+    <dt>Public land</dt><dd>${esc(pub(r)) || 'None within two miles'}${r[29] >= 0 ? `<br><span class="s">${esc(D.kinds[r[31]] || '')}</span>` : ''}</dd>
+    <dt>Hazards</dt><dd>${hazChips(r)}<span class="s" style="display:block;margin-top:2px">Nearest reactor ${r[25] >= 999 ? 'over 999' : r[25]} mi (${esc(D.names[r[26]])})</span></dd>
+    ${home ? `<dt>From you</dt><dd>${fromYou(i)}</dd>` : ''}
     <dt>Cities</dt><dd>${esc(far(r))}${dens(r) ? '<br><span class="s">' + esc(dens(r)) + '</span>' : ''}</dd>
     <dt>Shelter</dt><dd>${bldg(r)}</dd>
     ${D.cities[r[15]] ? `<dt>Resupply</dt><dd>${esc(D.cities[r[15]])}</dd>` : ''}
@@ -1076,7 +1136,7 @@ function popup(i) {
     ${r[8] ? `<dt>Owed</dt><dd>${money(r[8])}</dd>` : ''}
     ${r[11] ? `<dt>Status</dt><dd>${esc(r[11])}</dd>` : ''}
     <dt>List</dt><dd>${esc(ly.s)}${ly.l && ly.l !== ly.s ? ' / ' + esc(ly.l) : ''}<br><span class="s">${esc(ly.p)} &middot; updated ${esc(ly.d || 'unknown')}</span></dd></dl>
-    <div class="links"><a href="${gdir(r)}" target="_blank" rel="noopener">Drive there</a>
+    <div class="links"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a>
     <a href="${gmap(r)}" target="_blank" rel="noopener">Google Maps</a>
     <a href="${gsat(r)}" target="_blank" rel="noopener">Satellite</a>
     <a href="${gearth(r)}" target="_blank" rel="noopener">Google Earth</a>
@@ -1086,6 +1146,101 @@ function popup(i) {
     <a href="${q(pl + ' county tax collector property search ' + (r[12] || ''))}" target="_blank" rel="noopener">Tax records</a></div></div>`;
 }
 
+// ---- starting point: distance, bearing, and whether the direct line runs through a big city ----
+let home = null, dist = null, cross = null, bear = null, homeMarker = null, picking = false;
+const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+const gdirHome = r => gdir(r) + (home ? `&origin=${home.lat},${home.lon}` : '');
+const fromYou = i => `${fmt(Math.round(dist[i]))} mi ${COMPASS[bear[i]]} of you<div class="s"${cross[i] >= 0 ? ' style="color:var(--flare)"' : ''}>${
+  cross[i] >= 0 ? 'direct line crosses ' + esc(D.metros[cross[i]][0]) : 'no major city on the direct line'}</div>`;
+function setHome(lat, lon, label) {
+  home = {lat, lon, label};
+  const k = Math.cos(lat * Math.PI / 180) * 69.17, hx = lon * k, hy = lat * 69.05;
+  // big cities the start is not already inside; a line passing within 10 miles of one counts as crossing it
+  const ms = D.metros.map((m, j) => ({j, x: m[2] * k, y: m[1] * 69.05, r: m[3] + 10}))
+    .filter(m => Math.hypot(m.x - hx, m.y - hy) > m.r + 5);
+  dist = new Float32Array(R.length); cross = new Int16Array(R.length); bear = new Uint8Array(R.length);
+  for (let i = 0; i < R.length; i++) {
+    const x = R[i][1] * k, y = R[i][0] * 69.05, dx = x - hx, dy = y - hy, L = dx * dx + dy * dy;
+    dist[i] = Math.sqrt(L);
+    bear[i] = Math.round(((Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360) / 45) % 8;
+    let hit = -1;
+    for (const m of ms) {
+      const t = L ? Math.max(0, Math.min(1, ((m.x - hx) * dx + (m.y - hy) * dy) / L)) : 0;
+      if (Math.hypot(m.x - (hx + t * dx), m.y - (hy + t * dy)) < m.r) { hit = m.j; break; }
+    }
+    cross[i] = hit;
+  }
+  if (homeMarker) homeMarker.remove();
+  homeMarker = L.marker([lat, lon], {icon: L.divIcon({className: 'homepin', iconSize: [18, 18], iconAnchor: [9, 18]}), zIndexOffset: 1000})
+    .bindTooltip('Your starting point').addTo(map);
+  $('sp-now').innerHTML = `Starting from <b style="color:var(--ink)">${esc(label)}</b>. Distances are straight lines; roads run about a quarter longer.`;
+  $('sp-clear').hidden = false; $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = false; $('th-you').hidden = false;
+  try { localStorage.setItem('bob-home', JSON.stringify(home)); } catch (e) {}
+  apply(false);
+}
+function clearHome() {
+  home = dist = cross = bear = null; if (homeMarker) homeMarker.remove();
+  $('sp-now').textContent = 'Set where you would be leaving from. Sites are then ranked by distance, and any whose direct line crosses a big city are flagged. Your starting point stays in this browser.';
+  $('sp-clear').hidden = true; $('f-reach').value = '0'; $('f-cross').checked = false; $('th-you').hidden = true;
+  $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = true;
+  if ($('l-sort').value === 'near') $('l-sort').value = 'score';
+  try { localStorage.removeItem('bob-home'); } catch (e) {}
+  apply(false);
+}
+$('sp-q').addEventListener('input', () => {
+  const q = $('sp-q').value.trim().toLowerCase(), ul = $('sp-list'); let n = 0, html = '';
+  if (q.length >= 2) for (let j = 0; j < D.towns.length && n < 8; j++) { const t = D.towns[j], full = (t[0] + ', ' + t[1]).toLowerCase();
+    if (full.startsWith(q) || full.replace(',', '').startsWith(q)) { html += `<li tabindex="0" data-j="${j}">${esc(t[0])}, ${esc(t[1])}</li>`; n++; } }
+  ul.innerHTML = html; ul.hidden = !n;
+});
+const pickTown = li => { const t = D.towns[+li.dataset.j]; $('sp-list').hidden = true; $('sp-q').value = ''; setHome(t[2], t[3], t[0] + ', ' + t[1]); };
+$('sp-list').addEventListener('click', e => { const li = e.target.closest('li'); if (li) pickTown(li); });
+$('sp-list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('li')) pickTown(e.target); });
+$('sp-pick').addEventListener('click', () => { picking = !picking; $('map').classList.toggle('picking', picking);
+  $('sp-pick').setAttribute('aria-pressed', picking); $('sp-pick').textContent = picking ? 'Click the map…' : 'Pick on map'; });
+map.on('click', e => { if (!picking) return; picking = false; $('map').classList.remove('picking');
+  $('sp-pick').setAttribute('aria-pressed', 'false'); $('sp-pick').textContent = 'Pick on map';
+  setHome(+e.latlng.lat.toFixed(4), +e.latlng.lng.toFixed(4), `the point you picked (${e.latlng.lat.toFixed(3)}, ${e.latlng.lng.toFixed(3)})`); });
+$('sp-clear').addEventListener('click', clearHome);
+if (TILES && navigator.geolocation) { $('sp-geo').hidden = false;
+  $('sp-geo').addEventListener('click', () => navigator.geolocation.getCurrentPosition(
+    p => setHome(+p.coords.latitude.toFixed(4), +p.coords.longitude.toFixed(4), 'your current location'),
+    () => { $('sp-now').textContent = 'Your browser would not share a location. Search for your town or pick a point on the map.'; })); }
+
+// ---- public land overlay: fetched live for the area in view (needs signal; standalone page only) ----
+const LANDS = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services';
+const LAND_COL = {'Forest Service': css('--l-fs'), 'Bureau of Land Management': css('--l-blm'), 'National Park Service': css('--l-nps'),
+  'Fish and Wildlife Service': css('--l-fws'), 'State park or forest': css('--l-state')};
+map.createPane('pub'); map.getPane('pub').style.zIndex = 350;
+const pubRenderer = L.canvas({pane: 'pub'});
+let pubOn = false, pubLayer = null, pubSeq = 0, pubTimer = null;
+function legend() {
+  $('legend').innerHTML = [['prime', 'Prime 80+'], ['strong', 'Strong 65+'], ['viable', 'Viable 50+'], ['low', 'Marginal']]
+    .map(([k, t]) => `<span><i class="dot" style="background:var(--t-${k})"></i>${t}</span>`).join('')
+    + (pubOn ? (map.getZoom() < 7 ? '<span>Zoom in to see public land</span>'
+      : [['fs', 'National forest'], ['blm', 'BLM'], ['nps', 'National park'], ['fws', 'Refuge'], ['state', 'State park or forest']]
+        .map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '');
+}
+async function loadPub() {
+  const seq = ++pubSeq; legend();
+  if (!pubOn || map.getZoom() < 7) { if (pubLayer) { pubLayer.remove(); pubLayer = null; } return; }
+  const b = map.getBounds().pad(0.1), tol = 360 / (256 * 2 ** map.getZoom()) * 2;
+  const q = (svc, where, field) => fetch(`${LANDS}/${svc}/FeatureServer/0/query?` + new URLSearchParams({where, outFields: field, f: 'geojson',
+    geometry: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(','), geometryType: 'esriGeometryEnvelope', inSR: 4326, outSR: 4326,
+    maxAllowableOffset: tol, geometryPrecision: 5, resultRecordCount: 2000})).then(r => r.json()).then(g => (g.features || []).map(f => (f.properties.k = f.properties[field], f)));
+  try {
+    const [fed, st] = await Promise.all([
+      q('USA_Federal_Lands', "Agency IN ('Forest Service','Bureau of Land Management','National Park Service','Fish and Wildlife Service')", 'Agency'),
+      q('USA_Parks', "FEATTYPE = 'State park or forest'", 'FEATTYPE')]);
+    if (seq !== pubSeq) return;              // the map moved again while this was loading
+    const next = L.geoJSON(fed.concat(st), {renderer: pubRenderer, interactive: false,
+      style: f => ({color: LAND_COL[f.properties.k] || css('--l-state'), weight: 0.8, fillOpacity: 0.3})});
+    if (pubLayer) pubLayer.remove(); pubLayer = next.addTo(map);
+  } catch (e) { /* offline or the service is busy: leave whatever is drawn */ }
+}
+$('b-pub').addEventListener('click', () => { pubOn = !pubOn; $('b-pub').setAttribute('aria-pressed', pubOn); loadPub(); });
+map.on('moveend', () => { if (pubOn) { clearTimeout(pubTimer); pubTimer = setTimeout(loadPub, 350); } });
+
 // ---- filters ----
 $('sigs').innerHTML = CATS.map((c, k) => `<label class="sig"><input type="checkbox" id="c-${c.id}" data-k="${k}" checked>
   <span class="sw" style="background:var(--c-${c.id})"></span><span>${esc(c.label)}</span><span class="n" id="n-${k}"></span></label>`).join('');
@@ -1094,8 +1249,10 @@ $('built').textContent = D.generated; $('nsrc').textContent = fmt(D.layers.lengt
 if (D.total > R.length) $('capnote').textContent = ` (top by score of ${fmt(D.total)} found)`;
 const NOTOWN = 'No town within 12 miles';
 if (D.public) $('f-q').placeholder = 'Address or parcel ID';   // public copies carry no owner names
-const F = () => ({set: +$('f-set').value, wm: +$('f-water').value, bf: $('f-bldg').value, dist: +$('f-dist').value});
-const baseOk = (r, f) => r[14] <= f.set && !(f.wm > 0 && (r[16] < 0 || r[16] > f.wm)) && r[20] >= f.dist && bldgOk(r, f.bf);
+const F = () => ({set: +$('f-set').value, wm: +$('f-water').value, bf: $('f-bldg').value, dist: +$('f-dist').value,
+  pub: +$('f-pub').value, haz: +$('f-haz').value, nuke: +$('f-nuke').value});
+const baseOk = (r, f) => r[14] <= f.set && !(f.wm > 0 && (r[16] < 0 || r[16] > f.wm)) && r[20] >= f.dist && bldgOk(r, f.bf)
+  && !(f.pub > 0 && (r[29] < 0 || r[29] > f.pub)) && hazMax(r) <= f.haz && r[25] >= f.nuke;
 function fillStates() {                    // state and acquisition tallies follow the survival choices
   const f = F(), counts = CATS.map(() => 0), states = {}, cur = $('f-state').value;
   for (const r of R) { if (!baseOk(r, f)) continue;
@@ -1122,10 +1279,11 @@ let visible = [], inView = [], page = 0, mode = 'heat', clusterDirty = true;
 function apply(fit) {
   let mask = 0; document.querySelectorAll('#sigs input').forEach(c => { if (c.checked) mask |= 1 << +c.dataset.k; });
   const f = F(), est = $('f-estate').checked, stack = $('f-stack').checked, min = +$('f-score').value, st = $('f-state').value,
-    city = $('f-city').value, age = +$('f-age').value * 10, q = $('f-q').value.trim().toUpperCase();
+    city = $('f-city').value, age = +$('f-age').value * 10, q = $('f-q').value.trim().toUpperCase(),
+    reach = home ? +$('f-reach').value : 0, noCross = home && $('f-cross').checked;
   $('scv').textContent = min;
   visible = [];
-  let nPrime = 0, nWater = 0, nFar = 0;
+  let nPrime = 0, nWater = 0, nFar = 0, nPub = 0;
   for (let i = 0; i < R.length; i++) {
     const r = R[i];
     if (!(r[3] & mask) || r[2] < min || r[13] > age || !baseOk(r, f)) continue;
@@ -1134,8 +1292,12 @@ function apply(fit) {
     if (est && !(r[4] & 1)) continue;
     if (stack && !((r[4] & 1) && (r[3] & ~estateBit))) continue;
     if (q && !((r[5] + '|' + r[6] + '|' + r[12]).toUpperCase().includes(q))) continue;
+    if (reach && dist[i] > reach) continue;
+    if (noCross && cross[i] >= 0) continue;
     visible.push(i); if (r[2] >= 80) nPrime++; if (r[16] >= 0 && r[16] <= 805) nWater++; if (r[20] >= 50) nFar++;
+    if (r[29] >= 0 && r[29] <= 400) nPub++;
   }
+  $('k-pub').textContent = fmt(nPub);
   $('k-n').textContent = fmt(visible.length); $('k-prime').textContent = fmt(nPrime);
   $('k-water').textContent = fmt(nWater); $('k-far').textContent = fmt(nFar);
   const bb = $('bldg-banner'); bb.hidden = f.bf === 'any';
@@ -1159,6 +1321,7 @@ function listings() {
   for (const i of visible) if (b.contains([R[i][0], R[i][1]])) inView.push(i);
   if (s === 'water') inView.sort((a, b) => (R[a][16] < 0 ? 1e9 : R[a][16]) - (R[b][16] < 0 ? 1e9 : R[b][16]));
   else if (s === 'far') inView.sort((a, b) => R[b][20] - R[a][20]);
+  else if (s === 'near' && home) inView.sort((a, b) => dist[a] - dist[b]);
   else if (s === 'lead') inView.sort((a, b) => R[b][23] - R[a][23]);      // otherwise rows are already score-ordered
   page = 0; table();
 }
@@ -1170,11 +1333,12 @@ function table() {
     return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
       ${TILES ? `<td class="pic">${photo(r, 96, 64, 15)}</td>` : ''}
       <td class="site"><div class="t1">${esc(title(r))}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${r[12] && r[5] ? `<div class="s id">${esc(r[12])}</div>` : ''}</td>
-      <td>${esc(water(r)) || '<span class="s">none within 1 mi</span>'}</td><td>${bldg(r)}</td>
-      <td>${esc(far(r))}${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}</td>
+      <td>${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div></td>
+      <td>${hazChips(r)}</td><td>${bldg(r)}</td>
+      <td>${esc(far(r))}${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
       <td class="get"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}</td>
-      <td class="geo"><span class="id">${ll(r)}</span><div class="s"><a href="${gdir(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
-    || '<tr><td colspan="8" class="s" style="cursor:default">Nothing in this map view matches. Zoom out or loosen the filters.</td></tr>';
+      <td class="geo"><span class="id">${ll(r)}</span><div class="s"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
+    || '<tr><td colspan="9" class="s" style="cursor:default">Nothing in this map view matches. Zoom out or loosen the filters.</td></tr>';
 }
 map.on('moveend', listings); map.on('zoomend', syncLayers);
 $('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a')) return;
@@ -1187,21 +1351,24 @@ $('l-sort').addEventListener('change', listings);
 function setMode(m) { mode = m; $('m-heat').setAttribute('aria-pressed', m === 'heat'); $('m-pts').setAttribute('aria-pressed', m === 'points'); syncLayers(); }
 $('m-heat').addEventListener('click', () => setMode('heat')); $('m-pts').addEventListener('click', () => setMode('points'));
 const unpick = () => document.querySelectorAll('.picks button').forEach(b => b.setAttribute('aria-pressed', 'false'));
-['f-set', 'f-water', 'f-bldg', 'f-dist'].forEach(id => $(id).addEventListener('change', fillStates));
+['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke'].forEach(id => $(id).addEventListener('change', fillStates));
 $('f-state').addEventListener('change', () => { $('f-city').value = ''; fillCities(); });
-document.querySelectorAll('aside input, aside select').forEach(el =>
+document.querySelectorAll('aside input:not(#sp-q), aside select').forEach(el =>
   el.addEventListener(el.type === 'search' ? 'input' : 'change', () => { unpick(); apply(true); }));
 $('f-score').addEventListener('input', () => { unpick(); apply(false); });
 function clear() {
   document.querySelectorAll('#sigs input').forEach(c => c.checked = true);
   $('f-estate').checked = $('f-stack').checked = false; $('f-score').value = 0; $('f-age').value = '99'; $('f-q').value = '';
-  $('f-set').value = '0'; $('f-water').value = '-1'; $('f-bldg').value = 'any'; $('f-dist').value = '0'; unpick();
+  $('f-set').value = '0'; $('f-water').value = '-1'; $('f-bldg').value = 'any'; $('f-dist').value = '0';
+  $('f-pub').value = '-1'; $('f-haz').value = '9'; $('f-nuke').value = '0'; unpick();
 }
-$('reset').addEventListener('click', () => { clear(); $('f-state').value = ''; fillStates(); apply(false); map.setView([39.5, -98.5], 4); });
+$('reset').addEventListener('click', () => { clear(); $('f-reach').value = '0'; $('f-cross').checked = false; $('f-state').value = ''; fillStates(); apply(false); map.setView([39.5, -98.5], 4); });
 const PICKS = {                            // one-tap briefs; the state and town choice is kept
   deep: () => { $('f-dist').value = '50'; $('f-water').value = '805'; },
   ready: () => { $('f-bldg').value = 'house'; $('f-water').value = '805'; },
   raw: () => { $('f-bldg').value = 'none'; $('f-water').value = '805'; $('f-dist').value = '25'; },
+  pub: () => { $('f-pub').value = '400'; },
+  safe: () => { $('f-haz').value = '1'; $('f-nuke').value = '50'; },
   easy: () => document.querySelectorAll('#sigs input').forEach(c => c.checked = !!(GOV & (1 << +c.dataset.k))),
 };
 document.querySelectorAll('.picks button').forEach(b => b.addEventListener('click', () => {
@@ -1210,12 +1377,13 @@ document.querySelectorAll('.picks button').forEach(b => b.addEventListener('clic
   fillStates(); apply(false); }));
 function csvText(limit) {
   const rows = [['bug_out_score', ...D.parts.map(p => 'pts_' + p), 'setting', 'address', 'nearest_town', 'county', 'state', 'water_name', 'water_meters',
-    'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
+    'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'public_land', 'public_land_meters', 'hazards', 'miles_to_nuclear_plant', 'miles_from_start', 'line_crosses_city', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
     'lat', 'lon', 'directions', 'list', 'list_updated', 'source']];
   const take = inView.slice(0, limit);
   for (const i of take) { const r = R[i], ly = D.layers[r[9]];
     rows.push([r[2], ...parts(r), SETTING[r[14]], r[5], D.cities[r[15]], CO[r[7]] || '', ABBR[r[7].slice(0, 2)] || '', D.waters[r[17]], r[16] < 0 ? '' : r[16],
-      r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[18] < 0 ? '' : r[18], CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.id).join(' ') + ((r[4] & 1) ? ' estate' : ''),
+      r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[29] < 0 ? '' : pubName(r), r[29] < 0 ? '' : r[29],
+      D.hazards.filter((h, k) => +r[24][k]).map((h, k2) => h).join('; '), r[25], home ? Math.round(dist[i]) : '', home && cross[i] >= 0 ? D.metros[cross[i]][0] : '', r[18] < 0 ? '' : r[18], CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.id).join(' ') + ((r[4] & 1) ? ' estate' : ''),
       r[6], r[12], r[8] || '', r[11], r[0], r[1], gdir(r), ly.s, ly.d, ly.u]); }
   return [rows.map(r => r.map(v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(',')).join('\n'), take.length];
 }
@@ -1223,7 +1391,7 @@ function kmlText(limit) {                  // opens in Google Earth, Organic Map
   const take = inView.slice(0, limit);
   const pm = take.map(i => { const r = R[i];
     return `<Placemark><name>${esc(r[2] + ' · ' + title(r))}</name><description>${esc(['Bug-out score ' + r[2] + ' (' + tier(r[2])[0] + ')', place(r),
-      water(r) && 'Water: ' + water(r), far(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
+      water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), far(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
       CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.label).join('; '), r[6] && 'Owner: ' + r[6], r[12] && 'Parcel: ' + r[12],
       r[8] ? 'Owed: ' + money(r[8]) : ''].filter(Boolean).join('\n'))}</description><Point><coordinates>${r[1]},${r[0]},0</coordinates></Point></Placemark>`; }).join('\n');
   return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Bug Out Boyz sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
@@ -1248,8 +1416,9 @@ if (TILES) {                               // photos and file downloads only wor
 const ft = $('f-toggle');                  // on phones the filters fold away so the map comes first
 if (matchMedia('(max-width: 860px)').matches) document.querySelector('aside').classList.add('closed');
 ft.addEventListener('click', () => { const closed = document.querySelector('aside').classList.toggle('closed');
-  ft.setAttribute('aria-expanded', !closed); ft.textContent = closed ? 'Filters' : 'Hide filters'; });
-fillStates(); apply(false);
+  ft.setAttribute('aria-expanded', !closed); ft.textContent = closed ? 'Set start & filters' : 'Hide filters'; });
+legend(); fillStates(); apply(false);
+try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
 }
 async function load() {
   if (window.SCOUT_DATA) return window.SCOUT_DATA;
