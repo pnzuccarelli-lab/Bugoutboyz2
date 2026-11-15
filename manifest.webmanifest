@@ -1,12 +1,12 @@
 {
- "name": "Bug Out Boyz",
- "short_name": "Bug Out",
+ "name": "BuggedOut",
+ "short_name": "BuggedOut",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
  "background_color": "#11140e",
  "theme_color": "#11140e",
- "description": "Remote ground with water, shelter and a way to buy it.",
+ "description": "Survival site location engine for when SHTF.",
  "icons": [
   {
    "src": "icon-192.png",

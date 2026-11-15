@@ -11,7 +11,7 @@
 <style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>Bug Out Boyz</title>
+<title>BuggedOut</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Stencil+One&display=swap">
 <style>
@@ -43,8 +43,8 @@ header { padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 
   background: var(--panel) repeating-linear-gradient(90deg, transparent 0 39px, rgba(232, 228, 210, 0.045) 39px 40px); }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand svg { flex: none; }
-h1 { font-family: var(--stencil); font-size: 24px; font-weight: 400; margin: 0; letter-spacing: 0.06em; line-height: 1;
-  text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--stencil); font-size: 24px; font-weight: 400; margin: 0; letter-spacing: 0.04em; line-height: 1;
+  color: var(--accent); }
 header p { margin: 0; color: var(--muted); font-size: 12.5px; min-width: 0; }
 header .tag { color: var(--ink); font-family: var(--display); font-weight: 500; font-size: 14px; letter-spacing: 0.02em; }
 .shell { flex: 1; min-height: 0; display: flex; }
@@ -862,9 +862,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <header>
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="12" fill="none" stroke="#f2a33a" stroke-width="2"/><circle cx="17" cy="17" r="3" fill="#f2a33a"/><path d="M17 1v9M17 24v9M1 17h9M24 17h9" stroke="#f2a33a" stroke-width="2" fill="none"/></svg>
-    <h1>Bug Out Boyz</h1>
+    <h1>BuggedOut</h1>
   </div>
-  <p class="tag">Remote ground with water, shelter and a way to buy it.</p>
+  <p class="tag">Survival site location engine for when SHTF.</p>
   <p><span id="total"></span> sites scored &middot; <span id="nsrc"></span> public county lists &middot; built <span id="built"></span><span id="capnote"></span></p>
   <button id="f-toggle" aria-expanded="false" hidden>Set start &amp; filters</button>
   <button id="off-save" hidden>Save for offline use</button>
@@ -1465,7 +1465,7 @@ function kmlText(limit) {                  // opens in Google Earth, Organic Map
       water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), clim(r), far(r), road(r), town(r), hosp(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
       CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.label).join('; '), r[6] && 'Owner: ' + r[6], r[12] && 'Parcel: ' + r[12],
       r[8] ? 'Owed: ' + money(r[8]) : ''].filter(Boolean).join('\n'))}</description><Point><coordinates>${r[1]},${r[0]},0</coordinates></Point></Placemark>`; }).join('\n');
-  return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Bug Out Boyz sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
+  return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>BuggedOut sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
 }
 const done = t => { $('msg').textContent = t; setTimeout(() => $('msg').textContent = '', 4000); };
 $('copy').addEventListener('click', () => {
@@ -1481,8 +1481,8 @@ function save(text, name, type, n) {
 }
 if (TILES) {                               // photos and file downloads only work outside the hosted preview page
   $('th-pic').hidden = false; $('dl-csv').hidden = $('dl-kml').hidden = false;
-  $('dl-csv').addEventListener('click', () => { const [t, n] = csvText(100000); save(t, 'bug-out-boyz-sites.csv', 'text/csv', n); });
-  $('dl-kml').addEventListener('click', () => { const [t, n] = kmlText(20000); save(t, 'bug-out-boyz-sites.kml', 'application/vnd.google-earth.kml+xml', n); });
+  $('dl-csv').addEventListener('click', () => { const [t, n] = csvText(100000); save(t, 'buggedout-sites.csv', 'text/csv', n); });
+  $('dl-kml').addEventListener('click', () => { const [t, n] = kmlText(20000); save(t, 'buggedout-sites.kml', 'application/vnd.google-earth.kml+xml', n); });
 }
 const ft = $('f-toggle');                  // on phones the filters fold away so the map comes first
 if (matchMedia('(max-width: 860px)').matches) document.querySelector('aside').classList.add('closed');
