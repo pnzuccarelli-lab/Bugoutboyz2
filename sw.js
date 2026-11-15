@@ -1,6 +1,6 @@
 // BuggedOut offline copy. Keeps the page, the site list and any USGS maps you have looked at
 // (or saved with "Save this map area") on the device, so the dashboard opens with no signal.
-const VERSION = '2dfc80496b87';
+const VERSION = '57d145985dae';
 const SHELL = 'bob-shell-' + VERSION, TILES = 'bob-tiles-v1', FONTS = 'bob-fonts-v1', MAX_TILES = 8000;
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png", "scout-data.js", "scout-rows-0.js", "scout-rows-1.js", "scout-rows-2.js", "scout-rows-3.js", "lib/leaflet.js", "lib/leaflet.markercluster.js", "lib/leaflet-heat.js", "lib/topojson.min.js"];
 

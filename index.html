@@ -133,6 +133,7 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 .seg button, .base button { border-radius: 0; background: var(--panel); white-space: nowrap; }
 .seg button[aria-pressed="true"], .base button[aria-pressed="true"] { background: var(--accent); }
 .seg button + button, .base button + button { border-left: 0; }
+.base button[style*="margin-left"] { border-left: 1px solid var(--line); }
 .mapbar { display: contents; }
 .hz { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 2px; white-space: nowrap; }
 .hz.hi { background: var(--flare); color: var(--accent-ink); }
@@ -988,7 +989,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <dt>Land bank</dt><dd>A public agency that takes abandoned property and sells it cheaply.</dd>
       <dt>Tax delinquent</dt><dd>Taxes are overdue but the property has not gone to auction yet.</dd>
       <dt>Hunting land</dt><dd>National forest, BLM land, national wildlife refuges, and state wildlife management areas and game lands (from the USGS Protected Areas Database). Hunting is generally allowed with a state licence, but seasons, species and closed areas vary by unit. Some states, Mississippi among them, have few state areas in the database.</dd>
-      <dt>Power grid</dt><dd>The lower 48 run as three separate grids, Eastern, Western and Texas (ERCOT), joined by only a few small links, so a collapse in one does not spread to the others. The Power grid button draws their dividing lines and, when zoomed in, high-voltage transmission lines (live, needs signal). Being near a big line means outages there get fixed early, but it is also infrastructure some people prefer to stay away from.</dd>
+      <dt>Power grid</dt><dd>The lower 48 run as three separate grids, Eastern, Western and Texas (ERCOT), joined by only a few small links, so a collapse in one does not spread to the others. The <b>Grid regions</b> button switches their dividing lines on and off; <b>Power lines</b> switches high-voltage transmission lines on and off (they appear when zoomed in, and need signal). Being near a big line means outages there get fixed early, but it is also infrastructure some people prefer to stay away from.</dd>
       <dt>Downwind</dt><dd>East of a nuclear plant, big city or major base, where the usual west-to-east wind would carry fallout or smoke.</dd>
     </dl>
     <h3>How accurate is it</h3>
@@ -1138,10 +1139,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="mapwrap">
       <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading the site list. The first visit downloads about 55 MB…</p></div>
       <div class="mapbar">
-      <div class="base" role="group" aria-label="Basemap" id="base" hidden>
-        <button id="b-st" aria-pressed="true">Streets</button><button id="b-tp" aria-pressed="false">Topo</button><button id="b-ae" aria-pressed="false">Aerial</button>
-        <button id="b-pub" aria-pressed="false" style="margin-left:6px">Public land</button>
-        <button id="b-grid" aria-pressed="false">Power grid</button>
+      <div class="base" role="group" aria-label="Map layers" id="base">
+        <button id="b-st" aria-pressed="true" hidden>Streets</button><button id="b-tp" aria-pressed="false" hidden>Topo</button><button id="b-ae" aria-pressed="false" hidden>Aerial</button>
+        <button id="b-pub" aria-pressed="false" style="margin-left:6px" hidden>Public land</button>
+        <button id="b-grid" aria-pressed="false" style="margin-left:6px" title="Show or hide the three US power grids and their dividing lines">Grid regions</button><button id="b-lines" aria-pressed="false" title="Show or hide high-voltage transmission lines (zoom in; needs signal)" hidden>Power lines</button>
         <button id="m-loc" style="margin-left:6px" hidden>My location</button>
       </div>
       <div class="seg" role="group" aria-label="Map style">
@@ -1337,7 +1338,7 @@ if (TILES) {
     tp: watch(L.tileLayer(USGS_TOPO + '/tile/{z}/{y}/{x}', {maxZoom: 19, maxNativeZoom: 16, crossOrigin: true, className: 'tiles-topo', attribution: 'Topo: USGS The National Map'})),
     ae: watch(L.tileLayer(USGS + '/tile/{z}/{y}/{x}', {maxZoom: 19, maxNativeZoom: 16, crossOrigin: true, attribution: 'Imagery: USGS, USDA NAIP'})),
   };
-  $('base').hidden = false;
+  ['b-st', 'b-tp', 'b-ae', 'b-pub'].forEach(id => $(id).hidden = false);   // these need outside map servers, so only off the hosted preview
   const setBase = k => { for (const n in bases) { if (n === k) bases[n].addTo(map); else bases[n].remove(); $('b-' + n).setAttribute('aria-pressed', n === k); } };
   for (const n in bases) $('b-' + n).addEventListener('click', () => setBase(n));
   setBase(navigator.onLine ? 'st' : 'tp');   // with no signal, start on the topo map: it is the one that can be saved
@@ -1695,9 +1696,9 @@ function legend() {
     + (pubOn ? (map.getZoom() < 7 ? '<span>Zoom in to see public land</span>'
       : [['fs', 'National forest'], ['blm', 'BLM'], ['nps', 'National park'], ['fws', 'Refuge'], ['state', 'State park or forest']]
         .concat([['game', 'State game land']]).map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '')
-    + (gridOn ? [['east', 'Eastern grid'], ['west', 'Western grid'], ['tx', 'Texas grid (ERCOT)']].map(([k, t]) => `<span><i class="sw" style="background:var(--g-${k})"></i>${t}</span>`).join('')
-      + (map.getZoom() >= 7 ? [['hi', '345 kV and up'], ['mid', '220 to 287 kV'], ['lo', '100 to 161 kV']].map(([k, t]) => `<span><i class="sw" style="height:3px;width:16px;background:var(--v-${k})"></i>${t}</span>`).join('')
-        : '<span>Zoom in to see transmission lines</span>') : '');
+    + (gridOn ? [['east', 'Eastern grid'], ['west', 'Western grid'], ['tx', 'Texas grid (ERCOT)']].map(([k, t]) => `<span><i class="sw" style="background:var(--g-${k})"></i>${t}</span>`).join('') : '')
+    + (linesOn ? (map.getZoom() >= 7 ? [['hi', '345 kV and up'], ['mid', '220 to 287 kV'], ['lo', '100 to 161 kV']].map(([k, t]) => `<span><i class="sw" style="height:3px;width:16px;background:var(--v-${k})"></i>${t}</span>`).join('')
+        : '<span>Zoom in to see power lines</span>') : '');
 }
 async function loadPub() {
   const seq = ++pubSeq; legend();
@@ -1725,7 +1726,7 @@ map.on('moveend', () => { if (pubOn) { clearTimeout(pubTimer); pubTimer = setTim
 
 // ---- power grid: the three interconnections (shipped with the page) and live transmission lines ----
 const GRID_COL = {Eastern: css('--g-east'), Western: css('--g-west'), 'Texas (ERCOT)': css('--g-tx')};
-let gridOn = false, gridLayer = null, lineLayer = null, lineSeq = 0, lineTimer = null;
+let gridOn = false, linesOn = false, gridLayer = null, lineLayer = null, lineSeq = 0, lineTimer = null;
 function inRings(lon, lat, rings) { let inside = false;
   for (const ring of rings) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i], [xj, yj] = ring[j];
@@ -1743,7 +1744,7 @@ function drawGrid() {
 }
 async function loadLines() {
   const seq = ++lineSeq; legend();
-  if (!gridOn || !TILES || map.getZoom() < 7) { if (lineLayer) { lineLayer.remove(); lineLayer = null; } return; }
+  if (!linesOn || !TILES || map.getZoom() < 7) { if (lineLayer) { lineLayer.remove(); lineLayer = null; } return; }
   const b = map.getBounds().pad(0.1), z = map.getZoom(), tol = 360 / (256 * 2 ** z) * 2;
   try {
     const g = await fetch(D.grid.lines + '/query?' + new URLSearchParams({where: z < 9 ? 'VOLTAGE >= 220' : 'VOLTAGE >= 100', outFields: 'VOLTAGE,OWNER',
@@ -1756,8 +1757,15 @@ async function loadLines() {
     if (lineLayer) lineLayer.remove(); lineLayer = next.addTo(map);
   } catch (e) { /* no signal or the service is busy: keep what is drawn */ }
 }
-$('b-grid').addEventListener('click', () => { gridOn = !gridOn; $('b-grid').setAttribute('aria-pressed', gridOn); drawGrid(); loadLines(); });
-map.on('moveend', () => { if (gridOn) { clearTimeout(lineTimer); lineTimer = setTimeout(loadLines, 350); } });
+const saveGrid = () => { try { localStorage.setItem('bo-grid', JSON.stringify([gridOn, linesOn])); } catch (e) {} };
+function setGrid(on) { gridOn = on; $('b-grid').setAttribute('aria-pressed', on); drawGrid(); legend(); saveGrid(); }
+function setLines(on) { linesOn = on && TILES; $('b-lines').setAttribute('aria-pressed', linesOn); loadLines(); saveGrid();
+  if (linesOn && map.getZoom() < 7) { const m = $('map-msg'); m.textContent = 'Zoom in closer to see power lines.'; m.hidden = false; setTimeout(() => m.hidden = true, 4000); } }
+$('b-grid').addEventListener('click', () => setGrid(!gridOn));
+$('b-lines').addEventListener('click', () => setLines(!linesOn));
+if (TILES) $('b-lines').hidden = false;          // lines load live from a federal map server; the hosted preview cannot reach it
+map.on('moveend', () => { if (linesOn) { clearTimeout(lineTimer); lineTimer = setTimeout(loadLines, 350); } });
+
 
 // ---- filters ----
 $('sigs').innerHTML = CATS.map((c, k) => `<label class="sig"><input type="checkbox" id="c-${c.id}" data-k="${k}" checked>
@@ -2072,6 +2080,7 @@ document.addEventListener('click', e => {
     <p class="s"><b style="color:var(--ink)">Not checked:</b> whether a property is still for sale, still behind on taxes or still in an estate. Only the county office can tell you that, which is why every site links to its source record.</p>`;
 })();
 legend(); fillStates(); apply(false); renderPlan();
+try { const g = JSON.parse(localStorage.getItem('bo-grid') || 'null'); if (g) { if (g[0]) setGrid(true); if (g[1]) setLines(true); } } catch (e) {}   // the grid switches as last left
 try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
 }
 function expand(d) {                       // county-wide values are stored once per county; copy them onto each row
