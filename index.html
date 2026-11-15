@@ -88,6 +88,15 @@ dialog#how::backdrop { background: rgba(0, 0, 0, 0.6); }
 .how p, .how ol { margin: 0; } .how ol { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 .gloss { display: grid; grid-template-columns: minmax(120px, auto) 1fr; gap: 4px 14px; margin: 0; font-size: 13px; }
 .gloss dt { font-weight: 600; } .gloss dd { margin: 0; color: var(--muted); }
+.offbox { position: relative; }
+.offbox > summary { list-style: none; cursor: pointer; font-family: var(--display); font-weight: 500; letter-spacing: 0.03em; color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 6px 8px; }
+.offbox > summary::-webkit-details-marker { display: none; }
+.offbox.saved > summary { border-color: var(--t-strong); color: var(--t-strong); }
+.offpanel { position: absolute; z-index: 1200; top: calc(100% + 6px); right: 0; width: min(340px, calc(100vw - 32px)); background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.offpanel h3 { margin: 0; font-family: var(--display); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.offpanel p { margin: 0; }
 .stack { display: flex; flex-direction: column; gap: 9px; }
 .fl { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
 .sig { display: grid; grid-template-columns: auto 12px 1fr auto; gap: 8px; align-items: center; padding: 3px 0; cursor: pointer; }
@@ -235,6 +244,15 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   main { overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tiers { grid-template-columns: minmax(0, 1fr); }
+  .offpanel { position: fixed; left: 12px; right: 12px; top: 96px; width: auto; max-height: calc(100% - 120px); overflow-y: auto; }
+  /* the site list becomes cards: score, name, why, and buttons; everything else is one tap away in Details */
+  #listings thead, #listings td.more { display: none; }
+  #listings table, #listings tbody { display: block; }
+  #listings tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; padding: 12px; border-bottom: 1px solid var(--line); }
+  #listings tbody tr:last-child { border-bottom: 0; }
+  #listings td { display: block; padding: 0; border: 0; min-width: 0; }
+  #listings td.pic { display: none; }
+  .score { width: auto; } .bar { width: 64px; }
   .picks { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .picks button { flex: none; }
   .seg, .base { position: static; }
@@ -927,8 +945,22 @@ svg.leaflet-image-layer.leaflet-interactive path {
   <p><span id="total"></span> sites scored &middot; <span id="nsrc"></span> public county lists &middot; built <span id="built"></span><span id="capnote"></span></p>
   <button id="how-open">How it works</button>
   <button id="f-toggle" aria-expanded="false" hidden>Set start &amp; filters</button>
-  <button id="off-save" hidden>Save for offline use</button>
-  <span id="off-state" class="s" hidden></span>
+  <details id="offbox" class="offbox" hidden>
+    <summary>Offline</summary>
+    <div class="offpanel">
+      <h3>Use it without signal</h3>
+      <p id="off-state">Not saved on this device yet.</p>
+      <button id="off-save" class="primary">1. Save the site to this device</button>
+      <div id="off-more" class="stack" hidden>
+        <p class="s">2. Save the maps you will need. The site list and scores are already saved; maps are stored area by area.</p>
+        <button id="off-area">Save the map now on screen</button>
+        <button id="off-route">Save maps for my planned route</button>
+        <p class="s" id="off-usage"></p>
+        <button id="off-clear">Remove saved maps</button>
+      </div>
+      <p class="s">3. Put it on your home screen so you can open it with no signal. iPhone: tap Share, then Add to Home Screen. Android: open the browser menu, then Install app or Add to Home screen.</p>
+    </div>
+  </details>
   <span id="offline" hidden>No signal: showing saved maps and outlines. Street map, new photos and links need signal.</span>
 </header>
 <dialog id="how">
@@ -1098,7 +1130,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <button id="b-st" aria-pressed="true">Streets</button><button id="b-tp" aria-pressed="false">Topo</button><button id="b-ae" aria-pressed="false">Aerial</button>
         <button id="b-pub" aria-pressed="false" style="margin-left:6px">Public land</button>
         <button id="m-loc" style="margin-left:6px" hidden>My location</button>
-        <button id="off-area" style="margin-left:6px" hidden>Save this map area</button>
       </div>
       <div class="seg" role="group" aria-label="Map style">
         <button id="m-heat" aria-pressed="true">Heat map</button><button id="m-pts" aria-pressed="false">Sites</button>
@@ -1179,7 +1210,8 @@ const estateBit = 1 << CATS.findIndex(c => c.id === 'estate_owner');
 const GOV = CATS.reduce((m, c, k) => ['escheat', 'gov_surplus', 'land_bank'].includes(c.id) ? m | (1 << k) : m, 0);
 const fmt = n => n.toLocaleString();
 const money = v => '$' + Math.round(v).toLocaleString();
-const title = r => r[5] || (r[12] ? 'Parcel ' + r[12] : 'Unaddressed parcel');
+const pid = r => /^[0\s-]*$/.test(r[12]) ? '' : r[12];      // a parcel number of all zeros is a blank in the source list
+const title = r => r[5] || (pid(r) ? 'Parcel ' + pid(r) : 'Unaddressed parcel');
 const place = r => (CO[r[7]] || '') + (ABBR[r[7].slice(0, 2)] ? ', ' + ABBR[r[7].slice(0, 2)] : '');
 const miles = m => m < 161 ? Math.round(m * 3.281 / 10) * 10 + ' ft' : (m / 1609.34).toFixed(m < 1609 ? 2 : 1) + ' mi';
 const ll = r => r[0].toFixed(5) + ', ' + r[1].toFixed(5);
@@ -1514,10 +1546,11 @@ function routeTiles(p, t) {
   for (const bands of [full, full.slice(0, 2), full.slice(0, 1)]) { const u = build(bands); if (u.length <= 4000) return u; }   // very long trips keep less of the close-in band
   return build([[25, [7, 8, 9]]]);
 }
-function saveRoute() {
-  const p = plan[act], tell = t => { $('pl-msg').textContent = t; };
-  if (!p || !home) return;
-  if (!saveTopo) { tell(SITE ? 'Tap Save for offline use (top of the page) first, then save the route maps.' : 'Saving maps needs the public site; this copy cannot store them.'); return; }
+function saveRoute(tell) {
+  tell = tell || (t => { $('pl-msg').textContent = t; });
+  const p = plan[act];
+  if (!p || !home) { tell('Set a starting point and add a site to your plan first; then the maps for that trip can be saved.'); return; }
+  if (!saveTopo) { tell(SITE ? 'Open Offline at the top of the page and save the site to this device first.' : 'Saving maps needs the public site; this copy cannot store them.'); return; }
   const urls = routeTiles(p, tripFor(p));
   saveTopo(urls, tell, `the ${TIERS[act].name.toLowerCase()} route`);
 }
@@ -1591,6 +1624,7 @@ document.addEventListener('click', e => {
   else if (drop) { plan[+drop.dataset.drop] = null; savePlan(); renderPlan(); }
   else if (go) { e.preventDefault(); openSite(+go.dataset.go, 13); }
   else if (e.target.closest('[data-saveroute]')) saveRoute();
+  else if (e.target.closest('[data-details]')) openSite(+e.target.closest('[data-details]').dataset.details);
 });
 ['v-range', 'v-tank'].forEach(id => $(id).addEventListener('change', () => { try { localStorage.setItem('bo-vehicle', JSON.stringify([$('v-range').value, $('v-tank').value])); } catch (e) {} renderPlan(); }));
 try { const vv = JSON.parse(localStorage.getItem('bo-vehicle') || 'null'); if (vv) { $('v-range').value = vv[0]; $('v-tank').value = vv[1]; } } catch (e) {}
@@ -1764,16 +1798,17 @@ function table() {
   $('rows').innerHTML = inView.slice(page * PAGE, page * PAGE + PAGE).map(i => { const r = R[i], t = tier(r[2]);
     return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
       ${TILES ? `<td class="pic">${photo(r, 96, 64, 15)}</td>` : ''}
-      <td class="site"><div class="t1">${esc(title(r))}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${r[12] && r[5] ? `<div class="s id">${esc(r[12])}</div>` : ''}${whyHtml(r)}</td>
-      <td>${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
-      <td>${hazChips(r)}</td><td>${bldg(r)}<div class="s" style="margin-top:3px">${esc(town(r))}</div><div class="s">${esc(hosp(r))}</div></td>
-      <td>${esc(far(r))}<div class="s">${esc(road(r))}</div>${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
-      <td class="get"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}</td>
-      <td class="geo"><span class="id">${ll(r)}</span><div class="s"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
+      <td class="site"><div class="t1">${esc(title(r))}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${pid(r) && r[5] ? `<div class="s id">${esc(pid(r))}</div>` : ''}${whyHtml(r)}
+        <div class="planbtns"><button data-details="${i}">Details</button><span>Add to plan:</span>${TIERS.map((t, k) => `<button data-tier="${k}" data-i="${i}">${t.name}</button>`).join('')}</div></td>
+      <td class="more">${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
+      <td class="more">${hazChips(r)}</td><td class="more">${bldg(r)}<div class="s" style="margin-top:3px">${esc(town(r))}</div><div class="s">${esc(hosp(r))}</div></td>
+      <td class="more">${esc(far(r))}<div class="s">${esc(road(r))}</div>${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
+      <td class="get more"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}</td>
+      <td class="geo more"><span class="id">${ll(r)}</span><div class="s"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
     || '<tr><td colspan="9" class="s" style="cursor:default">Nothing in this map view matches. Zoom out or loosen the filters.</td></tr>';
 }
 map.on('moveend', listings); map.on('zoomend', syncLayers);
-$('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a')) return; openSite(+tr.dataset.i); });
+$('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a, button')) return; openSite(+tr.dataset.i); });
 $('l-prev').addEventListener('click', () => { page--; table(); });
 $('l-next').addEventListener('click', () => { page++; table(); });
 $('l-sort').addEventListener('change', listings);
@@ -1857,17 +1892,23 @@ ft.addEventListener('click', () => { const closed = document.querySelector('asid
   ft.setAttribute('aria-expanded', !closed); ft.textContent = closed ? 'Set start & filters' : 'Hide filters'; });
 // ---- offline copy (public site only): keeps the page, site list and viewed USGS maps on this device ----
 if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  const btn = $('off-save'), st = $('off-state'), say = t => { st.hidden = false; st.textContent = t; };
-  const saved = () => { btn.hidden = true; $('off-area').hidden = false; saveTopo = saveTopoImpl;   // maps can be stored from now on
-    say('Saved on this device. Opens without signal; add it to your home screen to find it again.'); };
-  btn.hidden = false;
+  const btn = $('off-save'), box = $('offbox'), say = t => { $('off-state').textContent = t; };
+  const usage = async () => {                // what is stored on this device, in plain numbers
+    try { const tiles = (await (await caches.open('bob-tiles-v1')).keys()).length, est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null;
+      $('off-usage').textContent = `${fmt(tiles)} map tiles saved` + (est && est.usage ? `, about ${fmt(Math.round(est.usage / 1e6))} MB used on this device in total.` : '.'); } catch (e) {}
+  };
+  const saved = () => { btn.hidden = true; $('off-more').hidden = false; box.classList.add('saved'); box.querySelector('summary').textContent = 'Offline: saved';
+    saveTopo = saveTopoImpl;               // maps can be stored from now on
+    say('Saved on this device. It opens with no signal from the same address or from your home screen.'); usage(); };
+  box.hidden = false; box.addEventListener('toggle', () => { if (box.open) usage(); });
+  document.addEventListener('click', e => { if (box.open && !box.contains(e.target)) box.open = false; });
   navigator.serviceWorker.getRegistration().then(r => { if (r && r.active) saved(); });
   btn.addEventListener('click', async () => {
     btn.disabled = true; btn.textContent = 'Saving, about 55 MB…';
     try { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready;
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
       saved(); }
-    catch (e) { btn.disabled = false; btn.textContent = 'Save for offline use'; say('Could not save: the browser blocked it or the device is out of space.'); }
+    catch (e) { btn.disabled = false; btn.textContent = '1. Save the site to this device'; say('Could not save: the browser blocked it or the device is out of space.'); }
   });
   // Fetch a list of topo tiles; the service worker stores each one as it arrives.
   let savingTiles = false;
@@ -1883,7 +1924,10 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
     savingTiles = false;
     tell(fail ? `Saved ${fmt(total - fail)} of ${fmt(total)} topo tiles for ${what}; ${fmt(fail)} could not be fetched. Try again with signal.`
       : `Topo maps saved for ${what} (${fmt(total)} tiles). Switch the map to Topo to use them offline.`);
+    setTimeout(usage, 2500);               // give the last tiles a moment to finish being stored
   };
+  $('off-route').addEventListener('click', () => saveRoute(say));
+  $('off-clear').addEventListener('click', async () => { await caches.delete('bob-tiles-v1'); say('Saved maps removed. The site list is still saved.'); usage(); });
   $('off-area').addEventListener('click', () => {            // the USGS topo map for what is on screen, a few zoom levels deep
     const b = map.getBounds(), z0 = Math.max(6, Math.min(13, Math.round(map.getZoom()))), z1 = Math.min(16, z0 + 3), urls = [];
     for (let z = z0; z <= z1; z++) for (let x = tileX(b.getWest(), z); x <= tileX(b.getEast(), z); x++)
