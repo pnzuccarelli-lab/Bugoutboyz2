@@ -988,6 +988,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <dt>Tax delinquent</dt><dd>Taxes are overdue but the property has not gone to auction yet.</dd>
       <dt>Downwind</dt><dd>East of a nuclear plant, big city or major base, where the usual west-to-east wind would carry fallout or smoke.</dd>
     </dl>
+    <h3>How accurate is it</h3>
+    <div id="audit" class="stack"></div>
     <h3>Limits you should know</h3>
     <p class="note" style="font-size:13px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil quality, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Planning a trip.</b> Open a site and add it to your plan as Fallback, Primary or Long-range. With a starting point set, the Trip plan panel works out road miles (the straight line plus a quarter), how many tanks it takes, a stopover on national forest or BLM land for each leg, the nearest small town off the interstate, and which cities and interstates the direct line crosses. It is a planning aid, not turn-by-turn routing: it does not know bridges, passes or closures, so drive the route once.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
   </div>
@@ -1086,6 +1088,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="stack" style="margin-top:8px">
         <label class="row"><input type="checkbox" id="f-estate"> <span>Owner is an estate or heirs</span></label>
         <label class="row"><input type="checkbox" id="f-stack"> <span>Estate owner <em>and</em> tax distress</span></label>
+        <label class="row"><input type="checkbox" id="f-gov"> <span>Government-published lists only</span></label>
         <select id="f-age" aria-label="List freshness">
           <option value="99">Any list age</option><option value="2">Lists updated in last 2 years</option>
           <option value="1">Lists updated in last year</option>
@@ -1195,6 +1198,7 @@ const CATS = D.cats;                       // ways a site could be acquired, in 
 //       36 growingSeasonDays (-1 unknown), 37 rainfallInches (-1 unknown), 38 milesToWeatherStation,
 //       39 milesToTown (99 = none within 30), 40 townNameIdx, 41 townPopulation,
 //       42 downwind bits (1 = of a reactor within 50 mi, 2 = of a big city or base within 100 mi), 43 thatNameIdx, 44 itsMiles]
+//       45 best publisher type among the site's lists (0 government, 1 university or research, 2 not verified)
 // Slots 22 and 24 arrive empty and are filled per county by expand().
 const R = D.rows, PAGE = 25;
 const SETTING = ['Rural', 'Small town', 'Urban'];
@@ -1274,6 +1278,12 @@ function why(r) {
 const whyText = r => { const w = why(r); return [w.good.length ? 'Strong: ' + w.good.join(', ') + '.' : '', w.weak.length ? 'Weak: ' + w.weak.join(', ') + '.' : ''].filter(Boolean).join(' '); };
 const whyHtml = r => { const w = why(r); return `<div class="why">${w.good.length ? `<span class="g">Strong:</span> ${esc(w.good.join(', '))}. ` : ''}${
   w.weak.length ? `<span class="w">Weak:</span> ${esc(w.weak.join(', '))}.` : ''}</div>`; };
+const SRC = ['Government publisher', 'University or research group', 'Publisher not verified'];
+const SRC_HELP = ['The list was published by an account we can identify as a county, city or state office.',
+  'The list was published by a university or research group, usually a copy of county data made for a study.',
+  'We could not tell who published this list. It may be the county\'s contractor or a private copy; check it against the county record.'];
+const srcLine = r => { const ly = D.layers[r[9]]; return `<span title="${esc(SRC_HELP[r[45]])}"${r[45] === 0 ? ' style="color:var(--t-strong)"' : ''}>${SRC[r[45]]}</span>` +
+  (ly.n ? ': ' + esc(ly.n) : '') + ' &middot; list updated ' + esc(ly.d || 'date unknown'); };
 const far = r => `${fmt(r[20])} mi from ${D.bigs[r[21]] || 'a city'}`;
 const dens = r => r[22] < 0 ? '' : (r[22] < 1 ? 'under 1 person' : fmt(r[22]) + (r[22] === 1 ? ' person' : ' people')) + ' per sq mi in county';
 // r[18]: footprint (sq ft) of the largest building centred within 50 m of the point; 0 none; -1 not checked
@@ -1378,7 +1388,7 @@ function popup(i) {
     ${r[12] ? `<dt>Parcel</dt><dd class="id">${esc(r[12])}</dd>` : ''}
     ${r[8] ? `<dt>Owed</dt><dd>${money(r[8])}</dd>` : ''}
     ${r[11] ? `<dt>Status</dt><dd>${esc(r[11])}</dd>` : ''}
-    <dt>List</dt><dd>${esc(ly.s)}${ly.l && ly.l !== ly.s ? ' / ' + esc(ly.l) : ''}<br><span class="s">${esc(ly.p)} &middot; updated ${esc(ly.d || 'unknown')}</span></dd></dl>
+    <dt>List</dt><dd>${esc(ly.s)}${ly.l && ly.l !== ly.s ? ' / ' + esc(ly.l) : ''}<br><span class="s">${srcLine(r)}</span></dd></dl>
     <div class="planbtns">Add to plan:${TIERS.map((t, k) => `<button data-tier="${k}" data-i="${i}">${t.name}</button>`).join('')}</div>
     <div class="links"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a>
     <a href="${gmap(r)}" target="_blank" rel="noopener">Google Maps</a>
@@ -1731,7 +1741,7 @@ const FILTERS = [['f-reach', '0', 'Reach'], ['f-cross', false, 'Skipping sites b
   ['f-pub', '-1', 'Public land'], ['f-bldg', 'any', 'Shelter'], ['f-dist', '0', 'Cities'], ['f-road', '0', 'Interstates'], ['f-haz', '9', 'Hazards'],
   ['f-nuke', '0', 'Reactors'], ['f-dw', false, 'Not downwind'], ['f-town', '999', 'Town'], ['f-hosp', '999', 'Hospital'],
   ['f-carry', false, 'Permitless-carry states'], ['f-estate', false, 'Estate or heirs on title'], ['f-stack', false, 'Estate and tax distress'],
-  ['f-age', '99', 'List age'], ['f-q', '', 'Search']];
+  ['f-gov', false, 'Government-published lists only'], ['f-age', '99', 'List age'], ['f-q', '', 'Search']];
 const isOn = ([id, off]) => { const el = $(id); return el.type === 'checkbox' ? el.checked : el.value !== off && !el.disabled; };
 function chipText([id, off, name]) { const el = $(id);
   if (el.type === 'checkbox') return name;
@@ -1769,7 +1779,7 @@ function collect() {                       // indices of every site that passes 
   let mask = 0; document.querySelectorAll('#sigs input').forEach(c => { if (c.checked) mask |= 1 << +c.dataset.k; });
   const f = F(), est = $('f-estate').checked, stack = $('f-stack').checked, min = +$('f-score').value, st = $('f-state').value,
     city = $('f-city').value, age = +$('f-age').value * 10, q = $('f-q').value.trim().toUpperCase(),
-    reach = home ? +$('f-reach').value : 0, noCross = home && $('f-cross').checked, out = [];
+    reach = home ? +$('f-reach').value : 0, noCross = home && $('f-cross').checked, gov = $('f-gov').checked, out = [];
   for (let i = 0; i < R.length; i++) {
     const r = R[i];
     if (!(r[3] & mask) || r[2] < min || r[13] > age || !baseOk(r, f)) continue;
@@ -1777,6 +1787,7 @@ function collect() {                       // indices of every site that passes 
     if (city !== '' && r[15] !== +city) continue;
     if (est && !(r[4] & 1)) continue;
     if (stack && !((r[4] & 1) && (r[3] & ~estateBit))) continue;
+    if (gov && r[45] !== 0) continue;
     if (q && !((r[5] + '|' + r[6] + '|' + r[12]).toUpperCase().includes(q))) continue;
     if (reach && dist[i] > reach) continue;
     if (noCross && cross[i] >= 0) continue;
@@ -1842,7 +1853,7 @@ function table() {
       <td class="more">${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
       <td class="more">${hazChips(r)}</td><td class="more">${bldg(r)}<div class="s" style="margin-top:3px">${esc(town(r))}</div><div class="s">${esc(hosp(r))}</div></td>
       <td class="more">${esc(far(r))}<div class="s">${esc(road(r))}</div>${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
-      <td class="get more"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}</td>
+      <td class="get more"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}<div class="s" style="margin-top:3px">${srcLine(r)}</div></td>
       <td class="geo more"><span class="id">${ll(r)}</span><div class="s"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
     || `<tr><td colspan="9" class="s" style="cursor:default">${visible.length
       ? 'No sites in this part of the map. Zoom out or move the map: ' + fmt(visible.length) + ' sites match elsewhere.'
@@ -1863,7 +1874,7 @@ document.querySelectorAll('aside input:not(#sp-q):not([type=number]), aside sele
 $('f-score').addEventListener('input', () => { unpick(); apply(false); });
 function clear() {
   document.querySelectorAll('#sigs input').forEach(c => c.checked = true);
-  $('f-estate').checked = $('f-stack').checked = false; $('f-score').value = 0; $('f-age').value = '99'; $('f-q').value = '';
+  $('f-estate').checked = $('f-stack').checked = $('f-gov').checked = false; $('f-score').value = 0; $('f-age').value = '99'; $('f-q').value = '';
   $('f-set').value = '0'; $('f-water').value = '-1'; $('f-bldg').value = 'any'; $('f-dist').value = '0';
   $('f-pub').value = '-1'; $('f-haz').value = '9'; $('f-nuke').value = '0';
   $('f-road').value = '0'; $('f-hosp').value = '999'; $('f-grow').value = '0'; $('f-rain').value = '0';
@@ -1887,13 +1898,13 @@ document.querySelectorAll('.picks button').forEach(b => b.addEventListener('clic
 function csvText(limit) {
   const rows = [['bug_out_score', ...D.parts.map(p => 'pts_' + p), 'setting', 'address', 'nearest_town', 'county', 'state', 'water_name', 'water_meters',
     'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'public_land', 'public_land_meters', 'miles_to_interstate', 'interstate', 'miles_to_hospital', 'hospital', 'growing_season_days', 'rainfall_inches', 'miles_to_town', 'town', 'town_population', 'downwind_of', 'state_law', 'hazards', 'miles_to_nuclear_plant', 'miles_from_start', 'line_crosses_city', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
-    'lat', 'lon', 'directions', 'list', 'list_updated', 'source']];
+    'lat', 'lon', 'directions', 'list', 'list_updated', 'publisher_type', 'source']];
   const take = inView.slice(0, limit);
   for (const i of take) { const r = R[i], ly = D.layers[r[9]];
     rows.push([r[2], ...parts(r), SETTING[r[14]], r[5], D.cities[r[15]], CO[r[7]] || '', ABBR[r[7].slice(0, 2)] || '', D.waters[r[17]], r[16] < 0 ? '' : r[16],
       r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[29] < 0 ? '' : pubName(r), r[29] < 0 ? '' : r[29], r[32], D.names[r[33]], r[34], D.names[r[35]], r[36] < 0 ? '' : r[36], r[37] < 0 ? '' : r[37], r[39], D.names[r[40]], r[41], (r[42] & 1 ? 'reactor ' : '') + (r[42] & 2 ? D.names[r[43]] : ''), lawText(r),
       D.hazards.filter((h, k) => +r[24][k]).map((h, k2) => h).join('; '), r[25], home ? Math.round(dist[i]) : '', home && cross[i] >= 0 ? D.metros[cross[i]][0] : '', r[18] < 0 ? '' : r[18], CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.id).join(' ') + ((r[4] & 1) ? ' estate' : ''),
-      r[6], r[12], r[8] || '', r[11], r[0], r[1], gdir(r), ly.s, ly.d, ly.u]); }
+      r[6], r[12], r[8] || '', r[11], r[0], r[1], gdir(r), ly.s, ly.d, SRC[r[45]], ly.u]); }
   return [rows.map(r => r.map(v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(',')).join('\n'), take.length];
 }
 function kmlText(limit) {                  // opens in Google Earth, Organic Maps, Gaia GPS, OsmAnd and similar offline map apps
@@ -1986,6 +1997,17 @@ document.addEventListener('click', e => {
   else if (e.target.closest('[data-how]') || e.target.id === 'how-open') { e.preventDefault(); if (how.showModal) how.showModal(); else how.setAttribute('open', ''); }
   else if (e.target.id === 'how-x' || e.target === how) { if (how.close) how.close(); else how.removeAttribute('open'); }
 });
+(() => {                                   // the latest spot-check, in plain numbers
+  const a = D.audit, el = $('audit'); if (!a || !a.summary) { el.innerHTML = '<p>No spot-check has been run on this copy.</p>'; return; }
+  const s = a.summary, rv = a.review, nGov = R.reduce((n, r) => n + (r[45] === 0), 0), nUni = R.reduce((n, r) => n + (r[45] === 1), 0);
+  el.innerHTML = `<p>On ${esc(s.date)} we drew ${s.sampled} sites at random and checked each against its source.</p><ul style="margin:0;padding-left:18px">
+    <li><b>${s.still_listed} of ${s.source_reachable}</b> whose source list could be reached were still on that list.</li>
+    <li><b>${s.address_within_1_mile} of ${s.address_found_by_census}</b> street addresses that the US Census geocoder recognised were within a mile of where we mapped the site${
+      s.with_street_address > s.address_found_by_census ? `; the Census did not recognise the other ${s.with_street_address - s.address_found_by_census}, which is common for rural addresses` : ''}.</li>
+    ${rv ? `<li>Reading ${rv.lists_reviewed} raw records beside what we showed, the location was right in all ${rv.location_correct}, the address was wrong in ${rv.address_wrong}, the parcel number in ${rv.parcel_wrong}, and ${rv.not_property_records} list was not property records. ${esc(rv.action)}</li>` : ''}
+    <li>Of the ${fmt(R.length)} sites, ${fmt(nGov)} come from a list published by an identifiable government office, ${fmt(nUni)} from a university or research group, and ${fmt(R.length - nGov - nUni)} from publishers we could not verify. Each site says which.</li></ul>
+    <p class="s"><b style="color:var(--ink)">Not checked:</b> whether a property is still for sale, still behind on taxes or still in an estate. Only the county office can tell you that, which is why every site links to its source record.</p>`;
+})();
 legend(); fillStates(); apply(false); renderPlan();
 try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
 }
