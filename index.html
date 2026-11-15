@@ -1136,13 +1136,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
     <h2 class="presets-h">Presets: one tap sets the filters for you</h2>
     <div class="picks" role="group" aria-label="Presets">
+      <button data-pick="best" aria-pressed="false">Best all-round<small>Water in 1 mi, dry, buildable, farmable, road in</small></button>
       <button data-pick="deep" aria-pressed="false">Deep cover<small>50+ mi out, water in &frac12; mile</small></button>
       <button data-pick="ready" aria-pressed="false">Move-in ready<small>Building + water in &frac12; mile</small></button>
       <button data-pick="raw" aria-pressed="false">Raw land<small>No building, water, 25+ mi out</small></button>
       <button data-pick="pub" aria-pressed="false">Backs onto public land<small>Forest, BLM or park in &frac14; mile</small></button>
       <button data-pick="hunt" aria-pressed="false">Hunt &amp; fish<small>Hunting land and water within a mile</small></button>
       <button data-pick="safe" aria-pressed="false">Low hazard<small>No high hazards, 50+ mi from a reactor</small></button>
-      <button data-pick="grow" aria-pressed="false">Grow your own<small>150+ day season, 25+ in rain, water in 1 mi</small></button>
+      <button data-pick="grow" aria-pressed="false">Grow your own<small>150+ day season, 25+ in rain, cropland soil, water in 1 mi</small></button>
       <button data-pick="family" aria-pressed="false">Family ready<small>House, town in 10 mi, hospital in 30</small></button>
       <button data-pick="easy" aria-pressed="false">Easiest to get<small>Government already holds it</small></button>
     </div>
@@ -2034,13 +2035,14 @@ function clear() {
 }
 $('reset').addEventListener('click', () => { clear(); $('f-reach').value = '0'; $('f-cross').checked = false; $('f-state').value = ''; fillStates(); apply(false); map.setView([39.5, -98.5], 4); });
 const PICKS = {                            // one-tap briefs; the state and town choice is kept
+  best: () => { $('f-water').value = '1609'; $('f-flood').value = '1'; $('f-slope').value = '15'; $('f-soil').value = '4'; $('f-roadin').value = '400'; },
   deep: () => { $('f-dist').value = '50'; $('f-water').value = '805'; },
   ready: () => { $('f-bldg').value = 'house'; $('f-water').value = '805'; },
   raw: () => { $('f-bldg').value = 'none'; $('f-water').value = '805'; $('f-dist').value = '25'; },
   pub: () => { $('f-pub').value = '400'; },
   hunt: () => { $('f-hunt').value = '1609'; $('f-water').value = '1609'; },
   safe: () => { $('f-haz').value = '1'; $('f-nuke').value = '50'; },
-  grow: () => { $('f-grow').value = '150'; $('f-rain').value = '25'; $('f-water').value = '1609'; },
+  grow: () => { $('f-grow').value = '150'; $('f-rain').value = '25'; $('f-water').value = '1609'; $('f-soil').value = '4'; $('f-slope').value = '15'; },
   family: () => { $('f-hosp').value = '30'; $('f-bldg').value = 'house'; $('f-road').value = '5'; $('f-town').value = '10'; },
   easy: () => document.querySelectorAll('#sigs input').forEach(c => c.checked = !!(GOV & (1 << +c.dataset.k))),
 };
@@ -2109,7 +2111,7 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
   document.addEventListener('click', e => { if (box.open && !box.contains(e.target)) box.open = false; });
   navigator.serviceWorker.getRegistration().then(r => { if (r && r.active) saved(); });
   btn.addEventListener('click', async () => {
-    btn.disabled = true; btn.textContent = 'Saving, about 76 MB…';
+    btn.disabled = true; btn.textContent = 'Saving, about 77 MB…';
     try { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready;
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
       saved(); }
