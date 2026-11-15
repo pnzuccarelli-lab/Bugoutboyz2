@@ -78,6 +78,7 @@ h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .fchip::after { content: "\00d7"; color: var(--muted); }
 .fchip.all { border-color: var(--accent); color: var(--accent); }
 .fchip.all::after { content: none; }
+.none { color: var(--p-shelter); font-weight: 600; }
 .why { font-size: 12px; margin-top: 4px; overflow-wrap: anywhere; }
 .why .g { color: var(--t-strong); } .why .w { color: var(--p-shelter); }
 dialog#how { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 0; max-width: min(760px, calc(100% - 24px));
@@ -1004,6 +1005,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <option value="0" selected>Any distance</option><option value="100">100 miles</option><option value="200">200 miles</option>
           <option value="300">300 miles (about one tank)</option><option value="500">500 miles</option></select></label>
         <label class="row"><input type="checkbox" id="f-cross" disabled> <span>Skip sites behind a major city</span></label>
+        <p class="note" id="reach-hint">These two switch on once you set a starting point above.</p>
         <div class="row" style="flex-wrap:nowrap">
           <label class="fl" style="flex:1;min-width:0" for="v-range">Miles on a full tank<input type="number" id="v-range" min="50" max="1500" step="10" value="300"></label>
           <label class="fl" style="flex:1;min-width:0" for="v-tank">Tank size (gal)<input type="number" id="v-tank" min="3" max="100" step="1" value="15"></label>
@@ -1124,7 +1126,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
     <div class="active" id="active" aria-label="Filters switched on"></div>
     <div class="mapwrap">
-      <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading sites…</p></div>
+      <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading the site list. The first visit downloads about 55 MB…</p></div>
       <div class="mapbar">
       <div class="base" role="group" aria-label="Basemap" id="base" hidden>
         <button id="b-st" aria-pressed="true">Streets</button><button id="b-tp" aria-pressed="false">Topo</button><button id="b-ae" aria-pressed="false">Aerial</button>
@@ -1170,7 +1172,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <script src="lib/leaflet.markercluster.js"></script>
 <script src="lib/leaflet-heat.js"></script>
 <script src="lib/topojson.min.js"></script>
-<script src="scout-data.js"></script><script src="scout-rows-0.js"></script><script src="scout-rows-1.js"></script><script src="scout-rows-2.js"></script>
+<script>function __ld(i, n) { var e = document.getElementById('loading'); if (e) e.textContent = i > n ? 'Building the map…' : 'Loading the site list: part ' + i + ' of ' + n + '…'; }</script>
+<script>__ld(1, 4)</script><script src="scout-data.js"></script><script>__ld(2, 4)</script><script src="scout-rows-0.js"></script><script>__ld(3, 4)</script><script src="scout-rows-1.js"></script><script>__ld(4, 4)</script><script src="scout-rows-2.js"></script><script>__ld(5, 4)</script>
 <script>
 const TILES = true;
 const SITE = true;            // true on the installable public site (served over https)
@@ -1334,7 +1337,14 @@ function marker(i) {
   return markers[i];
 }
 $('key').innerHTML = D.parts.map((p, k) => `<i class="sw" style="background:var(--p-${p})"></i><span><span style="color:var(--ink)">${PART_LABEL[p]}</span>: ${PART_HELP[p]}</span><b>${D.part_max[k]}</b>`).join('');
-const getChips = r => CATS.filter((c, k) => r[3] & (1 << k)).map(c => `<span class="chip" style="background:var(--c-${c.id})">${esc(c.label)}</span>`).join('')
+const GLOSS = {escheat: 'The owner died with no heirs, so the property passed to the government.',
+  gov_surplus: 'The government already holds it, after unpaid taxes or because it no longer needs it, and usually sells it.',
+  tax_sale: 'Listed for a county auction because property taxes went unpaid.',
+  estate_owner: 'The recorded owner has died. An administrator or the heirs may be willing to sell.',
+  land_bank: 'A public agency that takes abandoned property and sells it cheaply.',
+  tax_delinquent: 'Taxes are overdue but the property has not gone to auction yet.'};
+const TIER_HELP = {PRIME: 'Prime: 80 or more out of 100', STRONG: 'Strong: 65 to 79', VIABLE: 'Viable: 50 to 64', MARGINAL: 'Marginal: under 50'};
+const getChips = r => CATS.filter((c, k) => r[3] & (1 << k)).map(c => `<span class="chip" title="${esc(GLOSS[c.id] || '')}" style="background:var(--c-${c.id})">${esc(c.label)}</span>`).join('')
   + ((r[4] & 1) && !(r[3] & estateBit) ? '<span class="chip o">Estate / heirs on title</span>' : '')
   + ((r[4] & 2) ? '<span class="chip o">Attorney or administrator on record</span>' : '');
 function openSite(i, zoom) {                // show a site's details wherever the map layers are at
@@ -1351,7 +1361,7 @@ function popup(i) {
   return `<div class="pop"><h3>${esc(title(r))}</h3>
     <div class="where">${esc(CO[r[7]] || '')} County, ${esc(st)} &middot; ${SETTING[r[14]]}</div>${photo(r, 290, 140, 16)}
     <div class="top"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span><div class="s">bug-out score out of 100</div></span></div>${whyHtml(r)}
-    <div class="brk">${D.parts.map((p, k) => `<span>${PART_LABEL[p]}</span><span class="trk"><i style="width:${ps[k] / D.part_max[k] * 100}%;background:var(--p-${p})"></i></span><span class="pt">${ps[k]}/${D.part_max[k]}</span>`).join('')}</div>
+    <div class="brk">${D.parts.map((p, k) => `<span title="${esc(PART_HELP[p])}">${PART_LABEL[p]}</span><span class="trk"><i style="width:${ps[k] / D.part_max[k] * 100}%;background:var(--p-${p})"></i></span><span class="pt">${ps[k]}/${D.part_max[k]}</span>`).join('')}</div>
     <dl><dt>Water</dt><dd>${esc(water(r)) || 'None mapped within a mile'}</dd>
     <dt>Public land</dt><dd>${esc(pub(r)) || 'None within two miles'}${r[29] >= 0 ? `<br><span class="s">${esc(D.kinds[r[31]] || '')}</span>` : ''}</dd>
     <dt>Hazards</dt><dd>${hazChips(r)}<span class="s" style="display:block;margin-top:2px">Nearest reactor ${r[25] >= 999 ? 'over 999' : r[25]} mi (${esc(D.names[r[26]])})</span></dd>
@@ -1408,26 +1418,30 @@ function setHome(lat, lon, label) {
   homeMarker = L.marker([lat, lon], {icon: L.divIcon({className: 'homepin', iconSize: [18, 18], iconAnchor: [9, 18]}), zIndexOffset: 1000})
     .bindTooltip('Your starting point').addTo(map);
   $('sp-now').innerHTML = `Starting from <b style="color:var(--ink)">${esc(label)}</b>. Distances are straight lines; roads run about a quarter longer.`;
-  $('sp-clear').hidden = false; $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = false; $('th-you').hidden = false;
+  $('reach-hint').hidden = true; $('sp-clear').hidden = false; $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = false; $('th-you').hidden = false;
   try { localStorage.setItem('bob-home', JSON.stringify(home)); } catch (e) {}
   apply(false); renderPlan();
 }
 function clearHome() {
   home = dist = cross = bear = null; if (homeMarker) homeMarker.remove();
   $('sp-now').textContent = 'Set where you would be leaving from. Sites are then ranked by distance, and any whose direct line crosses a big city are flagged. Your starting point stays in this browser.';
-  $('sp-clear').hidden = true; $('f-reach').value = '0'; $('f-cross').checked = false; $('th-you').hidden = true;
+  $('reach-hint').hidden = false; $('sp-clear').hidden = true; $('f-reach').value = '0'; $('f-cross').checked = false; $('th-you').hidden = true;
   $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = true;
   if ($('l-sort').value === 'near') $('l-sort').value = 'score';
   try { localStorage.removeItem('bob-home'); } catch (e) {}
   apply(false); renderPlan();
 }
-$('sp-q').addEventListener('input', () => {
-  const q = $('sp-q').value.trim().toLowerCase(), ul = $('sp-list'); let n = 0, html = '';
-  if (q.length >= 2) for (let j = 0; j < D.towns.length && n < 8; j++) { const t = D.towns[j], full = (t[0] + ', ' + t[1]).toLowerCase();
-    if (full.startsWith(q) || full.replace(',', '').startsWith(q)) { html += `<li tabindex="0" data-j="${j}">${esc(t[0])}, ${esc(t[1])}</li>`; n++; } }
-  ul.innerHTML = html; ul.hidden = !n;
+$('sp-q').addEventListener('input', () => {       // "boise, id" should find "Boise City, ID": match the name loosely, the state if one was typed
+  const [nameQ, stQ] = $('sp-q').value.toLowerCase().split(',').map(x => x.trim()), ul = $('sp-list'), hits = [];
+  if (nameQ.length >= 2) for (const pass of [(n) => n.startsWith(nameQ), (n) => n.includes(nameQ)]) {
+    for (let j = 0; j < D.towns.length && hits.length < 8; j++) { const t = D.towns[j];
+      if (!hits.includes(j) && pass(t[0].toLowerCase()) && (!stQ || t[1].toLowerCase().startsWith(stQ))) hits.push(j); }
+    if (hits.length >= 8) break; }
+  ul.innerHTML = hits.map(j => `<li tabindex="0" data-j="${j}">${esc(D.towns[j][0])}, ${esc(D.towns[j][1])}</li>`).join('')
+    || (nameQ.length >= 2 ? '<li style="cursor:default;color:var(--muted)">No town by that name. Try a nearby one, or use Pick on map.</li>' : '');
+  ul.hidden = !ul.innerHTML;
 });
-const pickTown = li => { const t = D.towns[+li.dataset.j]; $('sp-list').hidden = true; $('sp-q').value = ''; setHome(t[2], t[3], t[0] + ', ' + t[1]); };
+const pickTown = li => { if (!li.dataset.j) return; const t = D.towns[+li.dataset.j]; $('sp-list').hidden = true; $('sp-q').value = ''; setHome(t[2], t[3], t[0] + ', ' + t[1]); };
 $('sp-list').addEventListener('click', e => { const li = e.target.closest('li'); if (li) pickTown(li); });
 $('sp-list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('li')) pickTown(e.target); });
 $('sp-pick').addEventListener('click', () => { picking = !picking; $('map').classList.toggle('picking', picking);
@@ -1575,6 +1589,10 @@ function renderPlan() {
   if (home) [[v.leg, 'One tank, with reserve'], [v.leg * 2, 'Two tanks']].forEach(([mi, label], n) =>
     L.circle([home.lat, home.lon], {radius: mi * 1609.34, color: css('--accent'), weight: 1, dashArray: n ? '4 6' : null, fill: false, interactive: false})
       .addTo(ringLayer).bindTooltip(label));
+  const any = plan.some(Boolean);
+  $('pl-copy').hidden = !any; if (TILES) $('pl-save').hidden = $('pl-print').hidden = !any;
+  $('tiers').className = any ? 'tiers' : '';
+  if (!any) { $('tiers').innerHTML = '<p class="note">Empty so far. Open a site on the map or in the list and choose <b style="color:var(--ink)">Add to plan</b>. A good plan has three: a Fallback within about 100 miles, a Primary within one tank, and a Long-range site beyond that.</p>'; $('trip').innerHTML = ''; return; }
   $('tiers').innerHTML = TIERS.map((t, k) => { const p = plan[k];
     return `<div class="tier-card${k === act && p ? ' on' : ''}"><h3>${t.name}</h3>${p
       ? `<div class="t1">${esc(p.title)} <span style="color:${tcol(p.score)}">${p.score}</span></div><div class="s">${esc(p.place)} &middot; <span class="id">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</span></div>
@@ -1593,7 +1611,8 @@ function renderPlan() {
     <div><h4>What the direct line crosses</h4>${x.cities.length || x.roads.length ? '<ul>' + x.cities.concat(x.roads).map(s => `<li>${esc(s)}</li>`).join('') + '</ul>'
       : '<div class="s">No city of 50,000+ and no interstate on the direct line.</div>'}<div class="s" style="margin-top:6px">A straight line, not a routed road. Use it to see what lies between, then pick roads that go around.</div></div>
     <div><h4>Other strong sites along the way</h4>${t.alts.length ? '<ul>' + t.alts.map(a => `<li><a href="#" data-go="${a.i}">${esc(title(R[a.i]))}</a> <span class="s">${R[a.i][2]} &middot; ${esc(place(R[a.i]))} &middot; mile ${fmt(Math.round(a.at * ROAD))}</span></li>`).join('') + '</ul>'
-      : '<div class="s">No site scoring 65+ within 25 miles of the line under the current filters.</div>'}</div></div>`;
+      : '<div class="s">No site scoring 65+ within 25 miles of the line under the current filters.</div>'}</div></div>
+    <p class="note" style="margin-top:8px"><b style="color:var(--ink)">Every site belongs to someone until you buy it or have the owner\u2019s permission.</b> Arrange that before you rely on a plan.</p>`;
   L.polyline([[home.lat, home.lon], [p.lat, p.lon]], {color: css('--accent'), weight: 2, dashArray: '8 6', interactive: false}).addTo(tripLayer);
   L.circleMarker([p.lat, p.lon], {radius: 9, color: css('--accent'), weight: 3, fill: false, interactive: false}).addTo(tripLayer);
   t.stops.forEach(s => L.marker(s.land ? [s.land.lat, s.land.lon] : [s.lat, s.lon], {icon: L.divIcon({className: 'wp', html: s.n, iconSize: [22, 22]})})
@@ -1644,6 +1663,7 @@ let pubOn = false, pubLayer = null, pubSeq = 0, pubTimer = null;
 function legend() {
   $('legend').innerHTML = [['prime', 'Prime 80+'], ['strong', 'Strong 65+'], ['viable', 'Viable 50+'], ['low', 'Marginal']]
     .map(([k, t]) => `<span><i class="dot" style="background:var(--t-${k})"></i>${t}</span>`).join('')
+    + (mode === 'heat' && map.getZoom() < 13 ? '<span><i class="sw" style="width:34px;background:linear-gradient(90deg,#3f5a2a,#8fa33a,#f2a33a,#fff0c2)"></i>Glow: more and better sites</span>' : '')
     + (pubOn ? (map.getZoom() < 7 ? '<span>Zoom in to see public land</span>'
       : [['fs', 'National forest'], ['blm', 'BLM'], ['nps', 'National park'], ['fws', 'Refuge'], ['state', 'State park or forest']]
         .map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '');
@@ -1724,6 +1744,10 @@ function renderChips() {
     + on.map(f => `<button class="fchip" data-off="${f[0]}" title="Remove this filter">${esc(chipText(f))}</button>`).join('')
     + (nSig < sig.length ? `<button class="fchip" data-off="sigs" title="Show every way to get a site">Ways to get it: ${nSig} of ${sig.length}</button>` : '')
     + (on.length > 1 || nSig < sig.length ? '<button class="fchip all" data-off="all">Clear all</button>' : '');
+  if (!visible.length) { const bl = blocker();     // say why the list is empty and offer the one change that helps most
+    $('active').insertAdjacentHTML('beforeend', '<span class="none">No sites match all of these together.</span>' + (bl
+      ? `<button class="fchip all" data-off="${bl.id}">Remove \u201c${esc(bl.label)}\u201d to see ${fmt(bl.n)}</button>`
+      : '<span class="none">No single filter is the cause; try Clear all.</span>')); }
   document.querySelectorAll('details.grp').forEach(g => { let n = FILTERS.filter(f => g.contains($(f[0])) && isOn(f)).length;
     if (g.contains($('sigs')) && nSig < sig.length) n++; g.querySelector('.cnt').textContent = n ? n + ' on' : ''; });
   guide();
@@ -1741,14 +1765,11 @@ function guide() {                         // the three-step strip: tick off wha
   g.querySelectorAll('li').forEach(li => li.classList.toggle('done', done[+li.dataset.step]));
 }
 let visible = [], inView = [], page = 0, mode = 'heat', clusterDirty = true;
-function apply(fit) {
+function collect() {                       // indices of every site that passes the filters as they are set right now
   let mask = 0; document.querySelectorAll('#sigs input').forEach(c => { if (c.checked) mask |= 1 << +c.dataset.k; });
   const f = F(), est = $('f-estate').checked, stack = $('f-stack').checked, min = +$('f-score').value, st = $('f-state').value,
     city = $('f-city').value, age = +$('f-age').value * 10, q = $('f-q').value.trim().toUpperCase(),
-    reach = home ? +$('f-reach').value : 0, noCross = home && $('f-cross').checked;
-  $('scv').textContent = min;
-  visible = [];
-  let nPrime = 0, nWater = 0, nFar = 0, nPub = 0;
+    reach = home ? +$('f-reach').value : 0, noCross = home && $('f-cross').checked, out = [];
   for (let i = 0; i < R.length; i++) {
     const r = R[i];
     if (!(r[3] & mask) || r[2] < min || r[13] > age || !baseOk(r, f)) continue;
@@ -1759,9 +1780,26 @@ function apply(fit) {
     if (q && !((r[5] + '|' + r[6] + '|' + r[12]).toUpperCase().includes(q))) continue;
     if (reach && dist[i] > reach) continue;
     if (noCross && cross[i] >= 0) continue;
-    visible.push(i); if (r[2] >= 80) nPrime++; if (r[16] >= 0 && r[16] <= 805) nWater++; if (r[20] >= 50) nFar++;
-    if (r[29] >= 0 && r[29] <= 400) nPub++;
+    out.push(i);
   }
+  return out;
+}
+function blocker() {                       // when nothing matches: which single filter, if removed, would bring back the most sites
+  let best = null;
+  for (const f of FILTERS.filter(isOn)) { const el = $(f[0]), was = el.type === 'checkbox' ? el.checked : el.value, label = chipText(f);
+    if (el.type === 'checkbox') el.checked = false; else el.value = f[1];
+    const n = collect().length;
+    if (el.type === 'checkbox') el.checked = was; else el.value = was;
+    if (n && (!best || n > best.n)) best = {id: f[0], label, n}; }
+  return best;
+}
+function apply(fit) {
+  const f = F(), st = $('f-state').value, q = $('f-q').value.trim();
+  $('scv').textContent = $('f-score').value;
+  visible = collect();
+  let nPrime = 0, nWater = 0, nFar = 0, nPub = 0;
+  for (const i of visible) { const r = R[i];
+    if (r[2] >= 80) nPrime++; if (r[16] >= 0 && r[16] <= 805) nWater++; if (r[20] >= 50) nFar++; if (r[29] >= 0 && r[29] <= 400) nPub++; }
   $('k-pub').textContent = fmt(nPub);
   $('k-n').textContent = fmt(visible.length); $('k-prime').textContent = fmt(nPrime);
   $('k-water').textContent = fmt(nWater); $('k-far').textContent = fmt(nFar);
@@ -1781,6 +1819,7 @@ function syncLayers() {                    // heat for the overview, individual 
   if (pts) { if (clusterDirty) { cluster.clearLayers(); cluster.addLayers(visible.map(marker)); clusterDirty = false; } cluster.addTo(map); }
   else cluster.remove();
   if (z >= 6) coLayer.addTo(map); else coLayer.remove();
+  legend();
 }
 function listings() {
   const b = map.getBounds(), s = $('l-sort').value; inView = [];
@@ -1796,7 +1835,7 @@ function table() {
   $('l-n').textContent = fmt(inView.length); $('l-pg').textContent = `${page + 1} / ${fmt(pages)}`;
   $('l-prev').disabled = page === 0; $('l-next').disabled = page >= pages - 1;
   $('rows').innerHTML = inView.slice(page * PAGE, page * PAGE + PAGE).map(i => { const r = R[i], t = tier(r[2]);
-    return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
+    return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" title="${TIER_HELP[t[0]]}" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
       ${TILES ? `<td class="pic">${photo(r, 96, 64, 15)}</td>` : ''}
       <td class="site"><div class="t1">${esc(title(r))}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${pid(r) && r[5] ? `<div class="s id">${esc(pid(r))}</div>` : ''}${whyHtml(r)}
         <div class="planbtns"><button data-details="${i}">Details</button><span>Add to plan:</span>${TIERS.map((t, k) => `<button data-tier="${k}" data-i="${i}">${t.name}</button>`).join('')}</div></td>
@@ -1805,7 +1844,9 @@ function table() {
       <td class="more">${esc(far(r))}<div class="s">${esc(road(r))}</div>${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
       <td class="get more"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}</td>
       <td class="geo more"><span class="id">${ll(r)}</span><div class="s"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
-    || '<tr><td colspan="9" class="s" style="cursor:default">Nothing in this map view matches. Zoom out or loosen the filters.</td></tr>';
+    || `<tr><td colspan="9" class="s" style="cursor:default">${visible.length
+      ? 'No sites in this part of the map. Zoom out or move the map: ' + fmt(visible.length) + ' sites match elsewhere.'
+      : 'No sites match these filters. The line above the map shows which filter to remove.'}</td></tr>`;
 }
 map.on('moveend', listings); map.on('zoomend', syncLayers);
 $('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a, button')) return; openSite(+tr.dataset.i); });
@@ -1956,7 +1997,8 @@ async function load() {
   if (window.SCOUT_DATA) { const d = window.SCOUT_DATA; if (!d.rows) d.rows = [].concat(...(window.SCOUT_ROWS || [])); return d; }
   const get = f => fetch(f).then(r => { if (!r.ok) throw new Error(f); return r.json(); });
   const d = await get('scout-data.json');
-  const parts = await Promise.all(Array.from({length: d.chunks}, (_, i) => get(`scout-rows-${i}.json`)));
+  let got = 0; const tick = x => { __ld(++got + 1, d.chunks + 1); return x; };
+  const parts = await Promise.all(Array.from({length: d.chunks}, (_, i) => get(`scout-rows-${i}.json`).then(tick)));
   d.rows = [].concat(...parts);
   return d;
 }
