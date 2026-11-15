@@ -1026,6 +1026,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
         <label class="fl" for="f-set">Setting<select id="f-set">
           <option value="0" selected>Rural only</option><option value="1">Rural and small towns</option>
           <option value="2">Rural, towns and cities</option></select></label>
+        <p class="s" id="more-note" hidden></p>
       </div>
     </details>
     <details class="grp">
@@ -1185,7 +1186,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <script src="lib/leaflet-heat.js"></script>
 <script src="lib/topojson.min.js"></script>
 <script>function __ld(i, n) { var e = document.getElementById('loading'); if (e) e.textContent = i > n ? 'Building the map…' : 'Loading the site list: part ' + i + ' of ' + n + '…'; }</script>
-<script>__ld(1, 5)</script><script src="scout-data.js"></script><script>__ld(2, 5)</script><script src="scout-rows-0.js"></script><script>__ld(3, 5)</script><script src="scout-rows-1.js"></script><script>__ld(4, 5)</script><script src="scout-rows-2.js"></script><script>__ld(5, 5)</script><script src="scout-rows-3.js"></script><script>__ld(6, 5)</script>
+<script>__ld(1, 2)</script><script src="scout-data.js"></script><script>__ld(2, 2)</script><script src="scout-rows-0.js"></script><script>__ld(3, 2)</script>
 <script>
 const TILES = true;
 const SITE = true;            // true on the installable public site (served over https)
@@ -1212,6 +1213,10 @@ const CATS = D.cats;                       // ways a site could be acquired, in 
 //       49 acres (-1 when the source list does not give it)
 // Slots 22 and 24 arrive empty and are filled per county by expand().
 const R = D.rows, PAGE = 25;
+// Rows arrive in parts (rural first, then towns and cities by state), so filtering walks them in score order.
+let ORDER = null;
+const reorder = () => { ORDER = Uint32Array.from(R.keys()).sort((a, b) => R[b][2] - R[a][2] || a - b); };
+reorder();
 const SETTING = ['Rural', 'Small town', 'Urban'];
 const PART_LABEL = {water: 'Water', remote: 'Remoteness', safety: 'Safety', community: 'Community', grow: 'Growing', room: 'Elbow room',
   obtain: 'Obtainable', shelter: 'Shelter', laws: 'Laws & taxes', public: 'Public land'};
@@ -1770,9 +1775,9 @@ map.on('moveend', () => { if (linesOn) { clearTimeout(lineTimer); lineTimer = se
 // ---- filters ----
 $('sigs').innerHTML = CATS.map((c, k) => `<label class="sig"><input type="checkbox" id="c-${c.id}" data-k="${k}" checked>
   <span class="sw" style="background:var(--c-${c.id})"></span><span>${esc(c.label)}</span><span class="n" id="n-${k}"></span></label>`).join('');
-$('total').textContent = fmt(R.length);
+$('total').textContent = fmt(D.shown || R.length);
 $('built').textContent = D.generated; $('nsrc').textContent = fmt(D.layers.length);
-if (D.total > R.length) $('capnote').textContent = ` (top by score of ${fmt(D.total)} found)`;
+if (D.total > (D.shown || R.length)) $('capnote').textContent = ` (top by score of ${fmt(D.total)} found)`;
 const NOTOWN = 'No town within 12 miles';
 if (D.public) $('f-q').placeholder = 'Address or parcel ID';   // public copies carry no owner names
 const F = () => ({set: +$('f-set').value, wm: +$('f-water').value, bf: $('f-bldg').value, dist: +$('f-dist').value,
@@ -1789,8 +1794,9 @@ function fillStates() {                    // state and acquisition tallies foll
     for (let k = 0; k < CATS.length; k++) if (r[3] & (1 << k)) counts[k]++;
     const s = r[7].slice(0, 2); states[s] = (states[s] || 0) + 1; }
   counts.forEach((n, k) => $('n-' + k).textContent = fmt(n));
+  if (f.set > 0) for (const s in D.more) if (!D.more[s].done && !states[s]) states[s] = 0;   // towns there not loaded yet
   $('f-state').innerHTML = '<option value="">All states</option>' + Object.keys(states).sort((a, b) => (ST[a] || '').localeCompare(ST[b] || ''))
-    .map(s => `<option value="${s}">${esc(ST[s] || s)} (${fmt(states[s])})</option>`).join('');
+    .map(s => `<option value="${s}">${esc(ST[s] || s)} (${fmt(states[s])}${f.set > 0 && D.more[s] && !D.more[s].done ? '+' : ''})</option>`).join('');
   if (states[cur]) $('f-state').value = cur;
   fillCities();
 }
@@ -1850,7 +1856,7 @@ function collect() {                       // indices of every site that passes 
   const f = F(), est = $('f-estate').checked, stack = $('f-stack').checked, min = +$('f-score').value, st = $('f-state').value,
     city = $('f-city').value, age = +$('f-age').value * 10, q = $('f-q').value.trim().toUpperCase(),
     reach = home ? +$('f-reach').value : 0, noCross = home && $('f-cross').checked, gov = $('f-gov').checked, out = [];
-  for (let i = 0; i < R.length; i++) {
+  for (const i of ORDER) {
     const r = R[i];
     if (!(r[3] & mask) || r[2] < min || r[13] > age || !baseOk(r, f)) continue;
     if (st && r[7].slice(0, 2) !== st) continue;
@@ -1874,8 +1880,35 @@ function blocker() {                       // when nothing matches: which single
     if (n && (!best || n > best.n)) best = {id: f[0], label, n}; }
   return best;
 }
+// ---- towns and cities, loaded on demand ----
+const PHONE = matchMedia('(max-width: 860px)').matches || (navigator.connection && navigator.connection.saveData) || (navigator.deviceMemory && navigator.deviceMemory < 4);
+const moreLeft = () => Object.keys(D.more).filter(s => !D.more[s].done);
+const moreMB = ss => Math.round(ss.reduce((n, s) => n + D.more[s].mb, 0));
+function ensureMore(states, quiet) {         // fetch the town-and-city rows for these states, then redraw
+  const todo = states.filter(s => D.more[s] && !D.more[s].done && !D.more[s].p);
+  if (!todo.length) return;
+  if (!quiet) note(`Loading towns and cities for ${todo.length > 1 ? fmt(todo.length) + ' states' : esc(ST[todo[0]] || todo[0])}…`);
+  for (const s of todo) D.more[s].p = fetchMore(D.more[s].f);
+  Promise.all(todo.map(s => D.more[s].p.then(rows => ({s, rows})))).then(got => {
+    for (const {s, rows} of got) { for (const r of expandRows(D, rows)) R.push(r); D.more[s].done = true; delete D.more[s].p; }
+    reorder(); fillStates();
+    if (home) setHome(home.lat, home.lon, home.label); else apply(false);
+  }, () => { for (const s of todo) delete D.more[s].p; note('Could not load the towns and cities. Check your signal and try again.'); });
+}
+function note(html) { const el = $('more-note'); el.innerHTML = html; el.hidden = !html; }
+function needMore(f, st) {                   // rural sites are always here; towns and cities come in when the Setting asks for them
+  const left = moreLeft();
+  if (Object.values(D.more).some(m => m.p)) return;          // still loading: keep the progress note
+  if (!left.length) { note(''); return; }
+  if (f.set === 0) { note(''); return; }
+  if (st) { if (D.more[st] && !D.more[st].done) ensureMore([st]); else note(''); return; }
+  if (!PHONE) { ensureMore(left); return; }
+  note(`On phones, towns and cities load one state at a time to save memory and data. Pick a state, or <a href="#" id="more-all">load all states (about ${moreMB(left)} MB)</a>.`);
+  $('more-all').addEventListener('click', e => { e.preventDefault(); ensureMore(moreLeft()); });
+}
 function apply(fit) {
   const f = F(), st = $('f-state').value, q = $('f-q').value.trim();
+  needMore(f, st);
   $('scv').textContent = $('f-score').value;
   visible = collect();
   let nPrime = 0, nWater = 0, nFar = 0, nPub = 0;
@@ -2070,22 +2103,35 @@ document.addEventListener('click', e => {
 });
 (() => {                                   // the latest spot-check, in plain numbers
   const a = D.audit, el = $('audit'); if (!a || !a.summary) { el.innerHTML = '<p>No spot-check has been run on this copy.</p>'; return; }
-  const s = a.summary, rv = a.review, nGov = R.reduce((n, r) => n + (r[45] === 0), 0), nUni = R.reduce((n, r) => n + (r[45] === 1), 0);
+  const s = a.summary, rv = a.review, bt = D.by_type || [R.reduce((n, r) => n + (r[45] === 0), 0), R.reduce((n, r) => n + (r[45] === 1), 0)], nGov = bt[0], nUni = bt[1], nAll = D.shown || R.length;
   el.innerHTML = `<p>On ${esc(s.date)} we drew ${s.sampled} sites at random and checked each against its source.</p><ul style="margin:0;padding-left:18px">
     <li><b>${s.still_listed} of ${s.source_reachable}</b> whose source list could be reached were still on that list.</li>
     <li><b>${s.address_within_1_mile} of ${s.address_found_by_census}</b> street addresses that the US Census geocoder recognised were within a mile of where we mapped the site${
       s.with_street_address > s.address_found_by_census ? `; the Census did not recognise the other ${s.with_street_address - s.address_found_by_census}, which is common for rural addresses` : ''}.</li>
     ${rv ? `<li>Reading ${rv.lists_reviewed} raw records beside what we showed, the location was right in all ${rv.location_correct}, the address was wrong in ${rv.address_wrong}, the parcel number in ${rv.parcel_wrong}, and ${rv.not_property_records} list was not property records. ${esc(rv.action)}</li>` : ''}
-    <li>Of the ${fmt(R.length)} sites, ${fmt(nGov)} come from a list published by an identifiable government office, ${fmt(nUni)} from a university or research group, and ${fmt(R.length - nGov - nUni)} from publishers we could not verify. Each site says which.</li></ul>
+    <li>Of the ${fmt(nAll)} sites, ${fmt(nGov)} come from a list published by an identifiable government office, ${fmt(nUni)} from a university or research group, and ${fmt(nAll - nGov - nUni)} from publishers we could not verify. Each site says which.</li></ul>
     <p class="s"><b style="color:var(--ink)">Not checked:</b> whether a property is still for sale, still behind on taxes or still in an estate. Only the county office can tell you that, which is why every site links to its source record.</p>`;
 })();
 legend(); fillStates(); apply(false); renderPlan();
+if (!PHONE) setTimeout(() => ensureMore(moreLeft(), true), 1500);
+window.BO = {R, collect, setHome};          // for automated checks   // desktops get every site without waiting
 try { const g = JSON.parse(localStorage.getItem('bo-grid') || 'null'); if (g) { if (g[0]) setGrid(true); if (g[1]) setLines(true); } } catch (e) {}   // the grid switches as last left
 try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
 }
-function expand(d) {                       // county-wide values are stored once per county; copy them onto each row
-  for (const r of d.rows) { const c = d.county[r[7]] || ['000000', -1]; r[24] = c[0] || '000000'; r[22] = c[1]; }
-  return d;
+function expandRows(d, rows) {             // county-wide values are stored once per county; copy them onto each row
+  for (const r of rows) { const c = d.county[r[7]] || ['000000', -1]; r[24] = c[0] || '000000'; r[22] = c[1]; }
+  return rows;
+}
+function expand(d) { expandRows(d, d.rows); d.more = d.more || {}; return d; }
+// Towns-and-cities rows for one state: script tags on the public site and docs copy (they also work from a saved file),
+// JSON on the hosted copy.
+let gotMore = [];
+window.SCOUT_MORE = rows => { gotMore.push(...rows); };
+function fetchMore(files) {
+  if (!window.SCOUT_DATA) return Promise.all(files.map(f => fetch(f).then(r => { if (!r.ok) throw new Error(f); return r.json(); }))).then(p => [].concat(...p));
+  return files.reduce((p, f) => p.then(() => new Promise((ok, no) => {
+    const el = document.createElement('script'); el.src = f; el.onload = ok; el.onerror = () => no(new Error(f)); document.head.appendChild(el);
+  })), Promise.resolve()).then(() => { const rows = gotMore; gotMore = []; return rows; });
 }
 async function load() {
   if (window.SCOUT_DATA) { const d = window.SCOUT_DATA; if (!d.rows) d.rows = [].concat(...(window.SCOUT_ROWS || [])); return d; }
