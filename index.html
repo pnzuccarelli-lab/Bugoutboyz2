@@ -62,9 +62,9 @@ h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; display: inline-block; }
 .n { font-family: var(--mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-select, input[type=search], button { font: inherit; color: var(--ink); background: var(--bg);
+select, input[type=search], input[type=number], button { font: inherit; color: var(--ink); background: var(--bg);
   border: 1px solid var(--line); border-radius: 3px; padding: 6px 8px; }
-select, input[type=search] { width: 100%; }
+select, input[type=search], input[type=number] { width: 100%; min-width: 0; box-sizing: border-box; }
 select:disabled { opacity: 0.5; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
 input[type=checkbox] { accent-color: var(--accent); }
@@ -105,6 +105,27 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
   border-radius: 3px; padding: 6px 9px; font-size: 11.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: calc(100% - 20px); }
 .legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.tier-card { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 10px 12px; min-width: 0;
+  display: flex; flex-direction: column; gap: 4px; }
+.tier-card.on { border-color: var(--accent); }
+.tier-card h3 { margin: 0; font-family: var(--display); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.tier-card .row { margin-top: 4px; }
+.trip { margin-top: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 12px 14px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 24px; }
+.trip h4 { margin: 0 0 4px; font-family: var(--display); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.trip ol, .trip ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.trip .big { font-family: var(--display); font-weight: 600; font-size: 16px; }
+.planbtns { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.planbtns button { padding: 2px 8px; font-size: 12px; }
+.wp { background: var(--bg); color: var(--accent); border: 2px solid var(--accent); border-radius: 50%; font-family: var(--mono); font-size: 11px;
+  font-weight: 600; display: flex; align-items: center; justify-content: center; }
+@media print {
+  header, aside, .picks, .kpis, .mapwrap, #listings, .lhead button, #pl-msg, .tier-card .row { display: none !important; }
+  html, body, .shell, main { display: block; height: auto; overflow: visible; background: #fff; color: #000; }
+  .tier-card, .trip { border-color: #999; background: #fff; break-inside: avoid; }
+  .tier-card h3, .trip h4, h2, .s, a { color: #000 !important; }
+}
 .lhead { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
 .lhead h2 { margin: 0; flex: 1; min-width: 180px; }
 .lhead select { width: auto; }
@@ -179,6 +200,7 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   #f-toggle { display: inline-block !important; }
   main { overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tiers { grid-template-columns: minmax(0, 1fr); }
   .picks { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .picks button { flex: none; }
   .seg, .base { position: static; }
@@ -884,6 +906,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <option value="0" selected>Any distance</option><option value="100">100 miles</option><option value="200">200 miles</option>
           <option value="300">300 miles (about one tank)</option><option value="500">500 miles</option></select></label>
         <label class="row"><input type="checkbox" id="f-cross" disabled> <span>Skip sites behind a major city</span></label>
+        <div class="row" style="flex-wrap:nowrap">
+          <label class="fl" style="flex:1;min-width:0" for="v-range">Miles on a full tank<input type="number" id="v-range" min="50" max="1500" step="10" value="300"></label>
+          <label class="fl" style="flex:1;min-width:0" for="v-tank">Tank size (gal)<input type="number" id="v-tank" min="3" max="100" step="1" value="15"></label>
+        </div>
       </div>
     </section>
     <section>
@@ -971,7 +997,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <section>
       <h2>How the score works</h2>
       <div class="key" id="key"></div>
-      <p class="note" style="margin-top:10px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil quality, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
+      <p class="note" style="margin-top:10px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil quality, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Planning a trip.</b> Open a site and add it to your plan as Fallback, Primary or Long-range. With a starting point set, the Trip plan panel works out road miles (the straight line plus a quarter), how many tanks it takes, a stopover on national forest or BLM land for each leg, the nearest small town off the interstate, and which cities and interstates the direct line crosses. It is a planning aid, not turn-by-turn routing: it does not know bridges, passes or closures, so drive the route once.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
     </section>
   </aside>
   <main>
@@ -1006,7 +1032,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div class="legend" id="legend"></div>
     </div>
-    <section>
+    <section id="plan">
+      <div class="lhead">
+        <h2>Trip plan</h2>
+        <button id="pl-copy">Copy plan</button><button id="pl-save" hidden>Download plan</button><button id="pl-print" hidden>Print plan</button>
+        <span id="pl-msg" class="s"></span>
+      </div>
+      <div class="tiers" id="tiers"></div>
+      <div id="trip"></div>
+    </section>
+    <section id="listings">
       <div class="lhead">
         <h2>Sites in map view &middot; <span id="l-n" style="color:var(--ink)">0</span></h2>
         <select id="l-sort" aria-label="Sort sites"><option value="score">Best bug-out score</option>
@@ -1172,6 +1207,12 @@ $('key').innerHTML = D.parts.map((p, k) => `<i class="sw" style="background:var(
 const getChips = r => CATS.filter((c, k) => r[3] & (1 << k)).map(c => `<span class="chip" style="background:var(--c-${c.id})">${esc(c.label)}</span>`).join('')
   + ((r[4] & 1) && !(r[3] & estateBit) ? '<span class="chip o">Estate / heirs on title</span>' : '')
   + ((r[4] & 2) ? '<span class="chip o">Attorney or administrator on record</span>' : '');
+function openSite(i, zoom) {                // show a site's details wherever the map layers are at
+  const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 16));
+  document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'});
+  setTimeout(() => { syncLayers();
+    L.popup({maxWidth: 320, maxHeight: Math.max(220, map.getSize().y - 70), offset: [0, -4]}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); }, 450);
+}
 function popup(i) {
   const r = R[i], ly = D.layers[r[9]], pl = place(r), st = ST[r[7].slice(0, 2)] || '', ps = parts(r), t = tier(r[2]);
   const q = s => 'https://www.google.com/search?q=' + encodeURIComponent(s);
@@ -1198,6 +1239,7 @@ function popup(i) {
     ${r[8] ? `<dt>Owed</dt><dd>${money(r[8])}</dd>` : ''}
     ${r[11] ? `<dt>Status</dt><dd>${esc(r[11])}</dd>` : ''}
     <dt>List</dt><dd>${esc(ly.s)}${ly.l && ly.l !== ly.s ? ' / ' + esc(ly.l) : ''}<br><span class="s">${esc(ly.p)} &middot; updated ${esc(ly.d || 'unknown')}</span></dd></dl>
+    <div class="planbtns">Add to plan:${TIERS.map((t, k) => `<button data-tier="${k}" data-i="${i}">${t.name}</button>`).join('')}</div>
     <div class="links"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a>
     <a href="${gmap(r)}" target="_blank" rel="noopener">Google Maps</a>
     <a href="${gsat(r)}" target="_blank" rel="noopener">Satellite</a>
@@ -1238,7 +1280,7 @@ function setHome(lat, lon, label) {
   $('sp-now').innerHTML = `Starting from <b style="color:var(--ink)">${esc(label)}</b>. Distances are straight lines; roads run about a quarter longer.`;
   $('sp-clear').hidden = false; $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = false; $('th-you').hidden = false;
   try { localStorage.setItem('bob-home', JSON.stringify(home)); } catch (e) {}
-  apply(false);
+  apply(false); renderPlan();
 }
 function clearHome() {
   home = dist = cross = bear = null; if (homeMarker) homeMarker.remove();
@@ -1247,7 +1289,7 @@ function clearHome() {
   $('f-reach').disabled = $('f-cross').disabled = $('o-near').disabled = true;
   if ($('l-sort').value === 'near') $('l-sort').value = 'score';
   try { localStorage.removeItem('bob-home'); } catch (e) {}
-  apply(false);
+  apply(false); renderPlan();
 }
 $('sp-q').addEventListener('input', () => {
   const q = $('sp-q').value.trim().toLowerCase(), ul = $('sp-list'); let n = 0, html = '';
@@ -1268,6 +1310,136 @@ if (TILES && navigator.geolocation) { $('sp-geo').hidden = false;
   $('sp-geo').addEventListener('click', () => navigator.geolocation.getCurrentPosition(
     p => setHome(+p.coords.latitude.toFixed(4), +p.coords.longitude.toFixed(4), 'your current location'),
     () => { $('sp-now').textContent = 'Your browser would not share a location. Search for your town or pick a point on the map.'; })); }
+
+// ---- trip plan: three tiers of destination, and for each one the legs, stopovers and what the line crosses ----
+const TIERS = [{name: 'Fallback', hint: 'Close enough to reach on a part tank or on foot over days: within about 100 miles.'},
+  {name: 'Primary', hint: 'Reachable on one tank with reserve.'},
+  {name: 'Long-range', hint: 'The ideal site beyond one tank. Only if the others fail, or if you leave early.'}];
+const ROAD = 1.25, RESERVE = 0.8, MPH = 45;            // roads run ~25% longer than the straight line; keep 20% of a tank; back-road pace
+let plan = [null, null, null], act = 1;
+try { const p = JSON.parse(localStorage.getItem('bo-plan') || 'null'); if (Array.isArray(p) && p.length === 3) plan = p; } catch (e) {}
+const tripLayer = L.layerGroup().addTo(map), ringLayer = L.layerGroup().addTo(map);
+const vehicle = () => { const range = Math.max(50, +$('v-range').value || 300), tank = Math.max(3, +$('v-tank').value || 15);
+  return {range, tank, mpg: range / tank, leg: range * RESERVE / ROAD}; };   // leg = straight-line miles one tank safely covers
+const hazWords = r => { const o = []; D.hazards.forEach((h, k) => { if (+r[24][k] === 2) o.push(h.toLowerCase() + ' (high)'); });
+  if (r[25] <= 50) o.push('reactor ' + r[25] + ' mi'); if (r[42]) o.push('downwind exposure'); return o.join(', ') || 'none flagged'; };
+const snap = i => { const r = R[i]; return {lat: r[0], lon: r[1], title: title(r), place: place(r), score: r[2], water: water(r) || 'no water within a mile',
+  town: town(r), hosp: hosp(r), haz: hazWords(r), land: pub(r) || 'no public land within 2 mi', clim: clim(r),
+  get: CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.label).join('; ')}; };
+function tripFor(p) {                      // everything about getting from the starting point to plan site p
+  const v = vehicle(), k = Math.cos((home.lat + p.lat) / 2 * Math.PI / 180) * 69.17, X = lon => lon * k, Y = lat => lat * 69.05;
+  const hx = X(home.lon), hy = Y(home.lat), dx = X(p.lon) - hx, dy = Y(p.lat) - hy, L2 = dx * dx + dy * dy, straight = Math.sqrt(L2);
+  const along = (lat, lon) => { const t = L2 ? Math.max(0, Math.min(1, ((X(lon) - hx) * dx + (Y(lat) - hy) * dy) / L2)) : 0;
+    return [t * straight, Math.hypot(X(lon) - (hx + t * dx), Y(lat) - (hy + t * dy))]; };   // [miles along the line, miles off it]
+  const road = straight * ROAD, legs = Math.max(1, Math.ceil(straight / v.leg));
+  const cities = D.towns.filter(t => t[4] >= 50000).map(t => [t, ...along(t[2], t[3])]).filter(c => c[2] <= 10 && c[1] > 30 && c[1] < straight - 8)
+    .sort((a, b) => a[1] - b[1]).map(c => ({name: c[0][0] + ', ' + c[0][1], at: Math.round(c[1]), pop: c[0][4]}));
+  const byRoute = {};
+  for (const q of D.roads) { const [a, off] = along(q[0], q[1]); if (off <= 3 && a > 3 && a < straight - 3) (byRoute[q[2]] = byRoute[q[2]] || []).push(a); }
+  const roads = Object.keys(byRoute).map(j => { const a = byRoute[j]; return {name: D.routes[j], at: Math.round(Math.min(...a)), run: Math.round(Math.max(...a) - Math.min(...a))}; })
+    .sort((a, b) => a.at - b.at);
+  const stops = [];
+  for (let n = 1; n < legs; n++) {         // one stopover per leg break: public land to camp on, and a small town off the interstate
+    const t = n / legs, wlat = home.lat + (p.lat - home.lat) * t, wlon = home.lon + (p.lon - home.lon) * t;
+    const near = (lat, lon) => Math.hypot(X(lon) - X(wlon), Y(lat) - Y(wlat));
+    let land = null, ld = 40, state = null, sd = 40;    // prefer national forest or BLM land; fall back to a state park or forest
+    for (const c of D.lands.cells) { if (Math.abs(c[0] - wlat) > 0.7) continue; const d = near(c[0], c[1]);
+      if (c[2] < 2) { if (d < ld) { ld = d; land = c; } } else if (d < sd) { sd = d; state = c; } }
+    const camp = land || state, cd = land ? ld : sd;
+    let tw = null, td = 25, twOff = null, tdOff = 25;
+    for (const q of D.towns) { if (q[4] < 500 || q[4] > 25000) continue; const d = near(q[2], q[3]); if (d >= td && d >= tdOff) continue;
+      let offRoad = true; for (const z of D.roads) if (Math.abs(z[0] - q[2]) < 0.12 && Math.hypot(X(z[1]) - X(q[3]), Y(z[0]) - Y(q[2])) < 5) { offRoad = false; break; }
+      if (d < td) { td = d; tw = q; } if (offRoad && d < tdOff) { tdOff = d; twOff = q; } }
+    const pick = twOff || tw;
+    stops.push({n, lat: +wlat.toFixed(4), lon: +wlon.toFixed(4), at: Math.round(straight * t),
+      land: camp ? {name: D.lands.names[camp[3]], kind: D.kinds[camp[2]], open: camp[2] < 2, lat: camp[0], lon: camp[1], off: Math.round(cd)} : null,
+      town: pick ? {name: pick[0] + ', ' + pick[1], pop: pick[4], off: Math.round(twOff ? tdOff : td), quiet: !!twOff} : null});
+  }
+  const alts = [];
+  for (const i of visible) { const r = R[i]; if (r[2] < 65 || (Math.abs(r[0] - p.lat) < 0.05 && Math.abs(r[1] - p.lon) < 0.05)) continue;
+    const [a, off] = along(r[0], r[1]);
+    if (off <= 25 && a > 20 && a < straight - 30 && !alts.some(x => Math.abs(x.at - a) < 15)) { alts.push({i, at: Math.round(a)}); if (alts.length >= 6) break; } }
+  return {v, straight: Math.round(straight), road: Math.round(road), hours: road / MPH, legs, cities, roads, stops, alts,
+    extraGal: Math.max(0, Math.ceil((road - v.range * RESERVE) / v.mpg)),
+    url: `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lon}&destination=${p.lat},${p.lon}&travelmode=driving&avoid=highways`
+      + (stops.length ? '&waypoints=' + stops.map(s => s.land ? s.land.lat + ',' + s.land.lon : s.lat + ',' + s.lon).join('%7C') : '')};
+}
+const hrs = h => h < 1 ? Math.round(h * 60) + ' min' : h.toFixed(1).replace('.0', '') + ' h';
+function tripText(p, t) {                  // plain-language lines, shared by the screen and the copied sheet
+  const out = {head: `${fmt(t.straight)} miles in a straight line, about ${fmt(t.road)} by road, roughly ${hrs(t.hours)} at back-road pace.`};
+  out.fuel = t.legs === 1 ? `One tank covers it with reserve (${fmt(t.v.range)}-mile range).`
+    : `Needs ${t.legs} legs at a ${fmt(t.v.range)}-mile range. Carry about ${t.extraGal} extra gallons, or refuel at each stop while fuel is still sold.`;
+  out.stops = t.stops.map(s => `Stop ${s.n}, about mile ${fmt(Math.round(s.at * ROAD))}: `
+    + (s.land ? `${s.land.name}${s.land.name === s.land.kind ? '' : ' (' + s.land.kind.toLowerCase() + ')'} near ${s.land.lat.toFixed(2)}, ${s.land.lon.toFixed(2)}, ${s.land.off} mi from the line${s.land.open ? '' : '; state land, so check its camping rules'}. `
+      : 'no national forest, BLM or state forest land within 40 miles; plan a private stop. ')
+    + (s.town ? `Nearest small town: ${s.town.name}, pop. ${fmt(s.town.pop)}${s.town.quiet ? ', off the interstate' : ', on an interstate'}.` : 'No small town within 25 miles.'));
+  out.cities = t.cities.slice(0, 6).map(c => `${c.name} (pop. ${fmt(c.pop)}) around mile ${fmt(Math.round(c.at * ROAD))}`);
+  if (t.cities.length > 6) out.cities.push(`and ${t.cities.length - 6} more cities of 50,000+`);
+  out.roads = t.roads.map(r => r.run > 30 ? `${r.name}: your line runs along it for about ${fmt(r.run)} miles from mile ${fmt(Math.round(r.at * ROAD))}`
+    : `${r.name} around mile ${fmt(Math.round(r.at * ROAD))}`);
+  return out;
+}
+function renderPlan() {
+  const v = vehicle();
+  ringLayer.clearLayers(); tripLayer.clearLayers();
+  if (home) [[v.leg, 'One tank, with reserve'], [v.leg * 2, 'Two tanks']].forEach(([mi, label], n) =>
+    L.circle([home.lat, home.lon], {radius: mi * 1609.34, color: css('--accent'), weight: 1, dashArray: n ? '4 6' : null, fill: false, interactive: false})
+      .addTo(ringLayer).bindTooltip(label));
+  $('tiers').innerHTML = TIERS.map((t, k) => { const p = plan[k];
+    return `<div class="tier-card${k === act && p ? ' on' : ''}"><h3>${t.name}</h3>${p
+      ? `<div class="t1">${esc(p.title)} <span style="color:${tcol(p.score)}">${p.score}</span></div><div class="s">${esc(p.place)} &middot; <span class="id">${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}</span></div>
+         <div class="s">${esc(p.water)} &middot; ${esc(p.town)}</div><div class="row"><button data-show="${k}">Show trip</button><button data-drop="${k}">Remove</button></div>`
+      : `<div class="s">${t.hint}</div><div class="s">Empty. Open a site on the map or in the list and choose Add to plan.</div>`}</div>`; }).join('');
+  const p = plan[act], box = $('trip');
+  if (!p) { box.innerHTML = ''; return; }
+  if (!home) { box.innerHTML = '<div class="trip"><div>Set your starting point (top left) to see the legs, stopovers and what the route crosses.</div></div>'; return; }
+  const t = tripFor(p), x = tripText(p, t);
+  box.innerHTML = `<div class="trip"><div><h4>${TIERS[act].name}: ${esc(p.title)}</h4><div class="big">${fmt(t.road)} road miles &middot; ${hrs(t.hours)}</div>
+      <div class="s">${esc(x.head)}</div><div style="margin-top:6px">${esc(x.fuel)}</div>
+      <div class="links"><a href="${t.url}" target="_blank" rel="noopener">Open route in Google Maps (avoiding highways)</a></div></div>
+    <div><h4>Stopovers</h4>${x.stops.length ? '<ol>' + x.stops.map(s => `<li>${esc(s.replace(/^Stop \d+, /, ''))}</li>`).join('') + '</ol>'
+      : '<div class="s">None needed: the trip fits in one tank.</div>'}${x.stops.length ? '<div class="s" style="margin-top:6px">Stopovers are the nearest public land to each leg break, located to within a few miles. Some BLM and forest parcels are small, landlocked or closed to camping, so confirm access and the rules for each one before you rely on it.</div>' : ''}</div>
+    <div><h4>What the direct line crosses</h4>${x.cities.length || x.roads.length ? '<ul>' + x.cities.concat(x.roads).map(s => `<li>${esc(s)}</li>`).join('') + '</ul>'
+      : '<div class="s">No city of 50,000+ and no interstate on the direct line.</div>'}<div class="s" style="margin-top:6px">A straight line, not a routed road. Use it to see what lies between, then pick roads that go around.</div></div>
+    <div><h4>Other strong sites along the way</h4>${t.alts.length ? '<ul>' + t.alts.map(a => `<li><a href="#" data-go="${a.i}">${esc(title(R[a.i]))}</a> <span class="s">${R[a.i][2]} &middot; ${esc(place(R[a.i]))} &middot; mile ${fmt(Math.round(a.at * ROAD))}</span></li>`).join('') + '</ul>'
+      : '<div class="s">No site scoring 65+ within 25 miles of the line under the current filters.</div>'}</div></div>`;
+  L.polyline([[home.lat, home.lon], [p.lat, p.lon]], {color: css('--accent'), weight: 2, dashArray: '8 6', interactive: false}).addTo(tripLayer);
+  L.circleMarker([p.lat, p.lon], {radius: 9, color: css('--accent'), weight: 3, fill: false, interactive: false}).addTo(tripLayer);
+  t.stops.forEach(s => L.marker(s.land ? [s.land.lat, s.land.lon] : [s.lat, s.lon], {icon: L.divIcon({className: 'wp', html: s.n, iconSize: [22, 22]})})
+    .bindTooltip('Stop ' + s.n + (s.land ? ': ' + s.land.name : '')).addTo(tripLayer));
+}
+function planSheet() {
+  const lines = ['BUGGEDOUT TRIP PLAN', 'Built ' + new Date().toISOString().slice(0, 10) + ' from data dated ' + D.generated, ''];
+  lines.push(home ? `START: ${home.label} (${home.lat}, ${home.lon})` : 'START: not set', `VEHICLE: ${fmt(vehicle().range)} miles on a ${vehicle().tank}-gallon tank`, '');
+  plan.forEach((p, k) => { lines.push(TIERS[k].name.toUpperCase());
+    if (!p) { lines.push('  not chosen', ''); return; }
+    lines.push(`  ${p.title}, ${p.place}  (bug-out score ${p.score})`, `  Coordinates: ${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`, `  Water: ${p.water}`, `  Town: ${p.town}`,
+      `  ${p.hosp}`, `  Land: ${p.land}`, ...(p.clim ? [`  Climate: ${p.clim}`] : []), `  Hazards: ${p.haz}`, `  How to get it: ${p.get}`);
+    if (home) { const t = tripFor(p), x = tripText(p, t); lines.push(`  Trip: ${x.head}`, `  Fuel: ${x.fuel}`, ...x.stops.map(s => '  ' + s),
+      x.cities.length || x.roads.length ? '  Direct line crosses: ' + x.cities.concat(x.roads).join('; ') : '  Direct line crosses no city of 50,000+ and no interstate.', `  Route: ${t.url}`); }
+    lines.push(''); });
+  lines.push('Distances are straight lines scaled up by a quarter for roads; drive the route once and correct them.',
+    'Stopovers are the nearest public land to each leg break; confirm access and camping rules before relying on one.',
+    "Every site belongs to someone until you buy it or have the owner's permission.");
+  return lines.join('\n');
+}
+const savePlan = () => { try { localStorage.setItem('bo-plan', JSON.stringify(plan)); } catch (e) {} };
+document.addEventListener('click', e => {
+  const add = e.target.closest('[data-tier]'), show = e.target.closest('[data-show]'), drop = e.target.closest('[data-drop]'), go = e.target.closest('[data-go]');
+  if (add) { act = +add.dataset.tier; plan[act] = snap(+add.dataset.i); savePlan(); renderPlan(); map.closePopup(); $('plan').scrollIntoView({block: 'nearest'}); }
+  else if (show) { act = +show.dataset.show; renderPlan(); const p = plan[act];
+    if (home && p) map.fitBounds(L.latLngBounds([[home.lat, home.lon], [p.lat, p.lon]]).pad(0.2)); else if (p) map.setView([p.lat, p.lon], 9);
+    document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'}); }
+  else if (drop) { plan[+drop.dataset.drop] = null; savePlan(); renderPlan(); }
+  else if (go) { e.preventDefault(); openSite(+go.dataset.go, 13); }
+});
+['v-range', 'v-tank'].forEach(id => $(id).addEventListener('change', () => { try { localStorage.setItem('bo-vehicle', JSON.stringify([$('v-range').value, $('v-tank').value])); } catch (e) {} renderPlan(); }));
+try { const vv = JSON.parse(localStorage.getItem('bo-vehicle') || 'null'); if (vv) { $('v-range').value = vv[0]; $('v-tank').value = vv[1]; } } catch (e) {}
+const planMsg = t => { $('pl-msg').textContent = t; setTimeout(() => $('pl-msg').textContent = '', 4000); };
+$('pl-copy').addEventListener('click', () => { const text = planSheet();
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => planMsg('Plan copied'),
+    () => { const ta = document.createElement('textarea'); ta.value = text; document.body.append(ta); ta.select();
+      try { document.execCommand('copy'); planMsg('Plan copied'); } catch (err) { planMsg('Copy was blocked by the browser'); } ta.remove(); }); });
 
 // ---- public land overlay: fetched live for the area in view (needs signal; standalone page only) ----
 const LANDS = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services';
@@ -1407,11 +1579,7 @@ function table() {
     || '<tr><td colspan="9" class="s" style="cursor:default">Nothing in this map view matches. Zoom out or loosen the filters.</td></tr>';
 }
 map.on('moveend', listings); map.on('zoomend', syncLayers);
-$('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a')) return;
-  const i = +tr.dataset.i; map.setView([R[i][0], R[i][1]], Math.max(map.getZoom(), 16));
-  document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'});
-  setTimeout(() => { syncLayers(); const m = marker(i);     // let the cluster layer reveal the marker before opening it
-    try { if (cluster.hasLayer(m)) cluster.zoomToShowLayer(m, () => m.openPopup()); } catch (e) {} }, 500); });
+$('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a')) return; openSite(+tr.dataset.i); });
 $('l-prev').addEventListener('click', () => { page--; table(); });
 $('l-next').addEventListener('click', () => { page++; table(); });
 $('l-sort').addEventListener('change', listings);
@@ -1420,7 +1588,7 @@ $('m-heat').addEventListener('click', () => setMode('heat')); $('m-pts').addEven
 const unpick = () => document.querySelectorAll('.picks button').forEach(b => b.setAttribute('aria-pressed', 'false'));
 ['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke', 'f-road', 'f-hosp', 'f-grow', 'f-rain', 'f-town', 'f-dw', 'f-carry'].forEach(id => $(id).addEventListener('change', fillStates));
 $('f-state').addEventListener('change', () => { $('f-city').value = ''; fillCities(); });
-document.querySelectorAll('aside input:not(#sp-q), aside select').forEach(el =>
+document.querySelectorAll('aside input:not(#sp-q):not([type=number]), aside select').forEach(el =>
   el.addEventListener(el.type === 'search' ? 'input' : 'change', () => { unpick(); apply(true); }));
 $('f-score').addEventListener('input', () => { unpick(); apply(false); });
 function clear() {
@@ -1479,6 +1647,11 @@ function save(text, name, type, n) {
   document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   done(`Saved ${fmt(n)} sites to ${name}`);
 }
+if (TILES) {                               // saving and printing the plan only work outside the hosted preview page
+  $('pl-save').hidden = $('pl-print').hidden = false;
+  $('pl-save').addEventListener('click', () => save(planSheet(), 'buggedout-plan.txt', 'text/plain', plan.filter(Boolean).length));
+  $('pl-print').addEventListener('click', () => window.print());
+}
 if (TILES) {                               // photos and file downloads only work outside the hosted preview page
   $('th-pic').hidden = false; $('dl-csv').hidden = $('dl-kml').hidden = false;
   $('dl-csv').addEventListener('click', () => { const [t, n] = csvText(100000); save(t, 'buggedout-sites.csv', 'text/csv', n); });
@@ -1496,7 +1669,7 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
   btn.hidden = false;
   navigator.serviceWorker.getRegistration().then(r => { if (r && r.active) saved(); });
   btn.addEventListener('click', async () => {
-    btn.disabled = true; btn.textContent = 'Saving, about 54 MB…';
+    btn.disabled = true; btn.textContent = 'Saving, about 55 MB…';
     try { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready;
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
       saved(); }
@@ -1520,7 +1693,7 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
   });
 }
 if (!Object.keys(LAW).length) $('carry-row').hidden = true;      // no state law table in this build
-legend(); fillStates(); apply(false);
+legend(); fillStates(); apply(false); renderPlan();
 try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
 }
 function expand(d) {                       // county-wide values are stored once per county; copy them onto each row
