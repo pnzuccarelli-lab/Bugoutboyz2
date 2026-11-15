@@ -87,7 +87,7 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 #map { position: absolute; inset: 0; background: var(--water); }
 .seg, .base { position: absolute; top: 10px; z-index: 500; display: flex; }
 .seg { right: 10px; } .base { left: 54px; }
-.seg button, .base button { border-radius: 0; background: var(--panel); }
+.seg button, .base button { border-radius: 0; background: var(--panel); white-space: nowrap; }
 .seg button[aria-pressed="true"], .base button[aria-pressed="true"] { background: var(--accent); }
 .seg button + button, .base button + button { border-left: 0; }
 .mapbar { display: contents; }
@@ -103,6 +103,8 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 #map.picking { cursor: crosshair; }
 .legend { position: absolute; left: 10px; bottom: 10px; z-index: 500; background: rgba(25, 29, 20, 0.92); border: 1px solid var(--line);
   border-radius: 3px; padding: 6px 9px; font-size: 11.5px; display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: calc(100% - 20px); }
+#map-msg { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); z-index: 600; max-width: min(520px, calc(100% - 24px));
+  background: rgba(25, 29, 20, 0.95); border: 1px solid var(--accent); border-radius: 3px; padding: 7px 11px; font-size: 12.5px; }
 .legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 .tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
@@ -204,6 +206,9 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   .picks { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   .picks button { flex: none; }
   .seg, .base { position: static; }
+  .base { flex-wrap: wrap; row-gap: 4px; }
+  .seg button, .base button { padding: 6px 7px; font-size: 13px; }
+  #map-msg { top: auto; bottom: 46px; }
   .mapbar { position: absolute; top: 10px; left: 54px; right: 10px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; }
   .mapwrap { height: 62vh; }
 }
@@ -1024,6 +1029,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="base" role="group" aria-label="Basemap" id="base" hidden>
         <button id="b-st" aria-pressed="true">Streets</button><button id="b-tp" aria-pressed="false">Topo</button><button id="b-ae" aria-pressed="false">Aerial</button>
         <button id="b-pub" aria-pressed="false" style="margin-left:6px">Public land</button>
+        <button id="m-loc" style="margin-left:6px" hidden>My location</button>
         <button id="off-area" style="margin-left:6px" hidden>Save this map area</button>
       </div>
       <div class="seg" role="group" aria-label="Map style">
@@ -1031,6 +1037,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       </div>
       <div class="legend" id="legend"></div>
+      <div id="map-msg" role="status" hidden></div>
     </div>
     <section id="plan">
       <div class="lhead">
@@ -1306,10 +1313,38 @@ map.on('click', e => { if (!picking) return; picking = false; $('map').classList
   $('sp-pick').setAttribute('aria-pressed', 'false'); $('sp-pick').textContent = 'Pick on map';
   setHome(+e.latlng.lat.toFixed(4), +e.latlng.lng.toFixed(4), `the point you picked (${e.latlng.lat.toFixed(3)}, ${e.latlng.lng.toFixed(3)})`); });
 $('sp-clear').addEventListener('click', clearHome);
-if (TILES && navigator.geolocation) { $('sp-geo').hidden = false;
-  $('sp-geo').addEventListener('click', () => navigator.geolocation.getCurrentPosition(
-    p => setHome(+p.coords.latitude.toFixed(4), +p.coords.longitude.toFixed(4), 'your current location'),
-    () => { $('sp-now').textContent = 'Your browser would not share a location. Search for your town or pick a point on the map.'; })); }
+// "Use my location": phones can take a while to get a fix (longer with no signal), so say what is happening,
+// try a quick coarse fix first, then wait on GPS, and explain each way it can fail.
+const GEO_HELP = 'Search for your town or use Pick on map instead.';
+let locating = false;
+function locate() {
+  if (locating) return;
+  const say = (t, brief) => { $('sp-now').textContent = t;      // in the side panel, and on the map for phones where the panel is folded away
+    const m = $('map-msg'); m.textContent = t; m.hidden = false; clearTimeout(say.t); if (brief) say.t = setTimeout(() => m.hidden = true, 6000); };
+  if (!navigator.geolocation || !window.isSecureContext) {
+    say('This copy cannot read your location (browsers only allow it on a secure https page). ' + GEO_HELP); return; }
+  locating = true;
+  const btns = [$('sp-geo'), $('m-loc')], label = t => btns.forEach(b => { b.disabled = locating; if (b.id === 'sp-geo') b.textContent = t; });
+  label('Locating…'); say('Finding your location. Allow it if your browser asks. Outdoors with no signal this can take up to a minute.');
+  let watch = null, timer = null;
+  const finish = () => { locating = false; if (watch !== null) navigator.geolocation.clearWatch(watch); clearTimeout(timer); label('Use my location'); };
+  const ok = p => { finish();
+    const lat = +p.coords.latitude.toFixed(4), lon = +p.coords.longitude.toFixed(4), acc = p.coords.accuracy || 0;
+    setHome(lat, lon, `the location you shared (${lat.toFixed(3)}, ${lon.toFixed(3)}${acc > 1600 ? ', accurate to about ' + Math.round(acc / 1609) + ' mi' : ''})`);
+    map.setView([lat, lon], Math.max(map.getZoom(), 7));
+    const m = $('map-msg'); m.textContent = 'Starting point set to your location.'; m.hidden = false; clearTimeout(say.t); say.t = setTimeout(() => m.hidden = true, 6000); };
+  const denied = () => { finish(); say('Location is blocked for this page. Allow it in your browser (the lock or "aA" icon by the address, or your phone\'s Settings, Privacy, Location Services), then tap again. ' + GEO_HELP); };
+  const giveUp = () => { finish(); say('Could not get a location fix. Move outdoors or near a window and try again. ' + GEO_HELP); };
+  const gps = () => {                       // second attempt: wait for a real GPS fix, up to a minute
+    say('Still looking: waiting for GPS. This works without signal but needs a view of the sky.');
+    timer = setTimeout(giveUp, 60000);
+    watch = navigator.geolocation.watchPosition(ok, e => { if (e.code === 1) denied(); }, {enableHighAccuracy: true, maximumAge: 0, timeout: 60000});
+  };
+  // first attempt: a fast fix from the network or a recent reading, good to within a mile or so, which is plenty here
+  navigator.geolocation.getCurrentPosition(ok, e => { if (e.code === 1) denied(); else gps(); }, {enableHighAccuracy: false, maximumAge: 600000, timeout: 8000});
+}
+if (TILES && 'geolocation' in navigator) { $('sp-geo').hidden = $('m-loc').hidden = false;
+  $('sp-geo').addEventListener('click', locate); $('m-loc').addEventListener('click', locate); }
 
 // ---- trip plan: three tiers of destination, and for each one the legs, stopovers and what the line crosses ----
 const TIERS = [{name: 'Fallback', hint: 'Close enough to reach on a part tank or on foot over days: within about 100 miles.'},
