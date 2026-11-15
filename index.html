@@ -24,6 +24,7 @@
   --t-prime: #f2a33a; --t-strong: #9ccb5e; --t-viable: #cfc48a; --t-low: #7d8070;
   --p-water: #5aa9e6; --p-remote: #f2a33a; --p-room: #c8b08a; --p-shelter: #dc8463; --p-obtain: #9fb4c7;
   --p-safety: #e6d15a; --p-public: #46b58c; --p-grow: #7ac74f; --p-community: #b596e6; --p-laws: #e08fb8;
+  --g-east: #6fa8ff; --g-west: #ff8a5c; --g-tx: #ffd84a; --v-hi: #ff4fa3; --v-mid: #ffb347; --v-lo: #c9b8ff;
   --l-game: #d9734a; --l-fs: #4f9f5a; --l-blm: #c9a94f; --l-nps: #9a82e0; --l-fws: #4aa9b0; --l-state: #86c2a0;
   --c-escheat: #f06292; --c-gov_surplus: #a98be8; --c-tax_sale: #f59a4a; --c-estate_owner: #62a8f2;
   --c-land_bank: #3fc4b2; --c-tax_delinquent: #b9be6a;
@@ -987,6 +988,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <dt>Land bank</dt><dd>A public agency that takes abandoned property and sells it cheaply.</dd>
       <dt>Tax delinquent</dt><dd>Taxes are overdue but the property has not gone to auction yet.</dd>
       <dt>Hunting land</dt><dd>National forest, BLM land, national wildlife refuges, and state wildlife management areas and game lands (from the USGS Protected Areas Database). Hunting is generally allowed with a state licence, but seasons, species and closed areas vary by unit. Some states, Mississippi among them, have few state areas in the database.</dd>
+      <dt>Power grid</dt><dd>The lower 48 run as three separate grids, Eastern, Western and Texas (ERCOT), joined by only a few small links, so a collapse in one does not spread to the others. The Power grid button draws their dividing lines and, when zoomed in, high-voltage transmission lines (live, needs signal). Being near a big line means outages there get fixed early, but it is also infrastructure some people prefer to stay away from.</dd>
       <dt>Downwind</dt><dd>East of a nuclear plant, big city or major base, where the usual west-to-east wind would carry fallout or smoke.</dd>
     </dl>
     <h3>How accurate is it</h3>
@@ -1139,6 +1141,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <div class="base" role="group" aria-label="Basemap" id="base" hidden>
         <button id="b-st" aria-pressed="true">Streets</button><button id="b-tp" aria-pressed="false">Topo</button><button id="b-ae" aria-pressed="false">Aerial</button>
         <button id="b-pub" aria-pressed="false" style="margin-left:6px">Public land</button>
+        <button id="b-grid" aria-pressed="false">Power grid</button>
         <button id="m-loc" style="margin-left:6px" hidden>My location</button>
       </div>
       <div class="seg" role="group" aria-label="Map style">
@@ -1386,6 +1389,7 @@ function popup(i) {
     <dl><dt>Water</dt><dd>${esc(water(r)) || 'None mapped within a mile'}</dd>
     <dt>Public land</dt><dd>${esc(pub(r)) || 'None within two miles'}${r[29] >= 0 ? `<br><span class="s">${esc(D.kinds[r[31]] || '')}</span>` : ''}</dd>
     <dt>Hunting</dt><dd>${hunt(r) ? `${esc(hunt(r))}<br><span class="s" title="${esc(HUNT_NOTE)}">${esc(D.kinds[r[48]] || '')}; check state rules</span>` : 'No hunting land mapped within two miles'}</dd>
+    ${gridOf(r) ? `<dt>Power grid</dt><dd>${esc(gridOf(r))} <span class="s">interconnection</span></dd>` : ''}
     <dt>Hazards</dt><dd>${hazChips(r)}<span class="s" style="display:block;margin-top:2px">Nearest reactor ${r[25] >= 999 ? 'over 999' : r[25]} mi (${esc(D.names[r[26]])})</span></dd>
     ${home ? `<dt>From you</dt><dd>${fromYou(i)}</dd>` : ''}
     <dt>Growing</dt><dd>${esc(clim(r)) || 'No weather station within 60 miles'}${r[38] >= 0 ? `<br><span class="s">from weather stations, nearest ${r[38]} mi away</span>` : ''}</dd>
@@ -1690,7 +1694,10 @@ function legend() {
     + (mode === 'heat' && map.getZoom() < 13 ? '<span><i class="sw" style="width:34px;background:linear-gradient(90deg,#3f5a2a,#8fa33a,#f2a33a,#fff0c2)"></i>Glow: more and better sites</span>' : '')
     + (pubOn ? (map.getZoom() < 7 ? '<span>Zoom in to see public land</span>'
       : [['fs', 'National forest'], ['blm', 'BLM'], ['nps', 'National park'], ['fws', 'Refuge'], ['state', 'State park or forest']]
-        .concat([['game', 'State game land']]).map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '');
+        .concat([['game', 'State game land']]).map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '')
+    + (gridOn ? [['east', 'Eastern grid'], ['west', 'Western grid'], ['tx', 'Texas grid (ERCOT)']].map(([k, t]) => `<span><i class="sw" style="background:var(--g-${k})"></i>${t}</span>`).join('')
+      + (map.getZoom() >= 7 ? [['hi', '345 kV and up'], ['mid', '220 to 287 kV'], ['lo', '100 to 161 kV']].map(([k, t]) => `<span><i class="sw" style="height:3px;width:16px;background:var(--v-${k})"></i>${t}</span>`).join('')
+        : '<span>Zoom in to see transmission lines</span>') : '');
 }
 async function loadPub() {
   const seq = ++pubSeq; legend();
@@ -1715,6 +1722,42 @@ async function loadPub() {
 }
 $('b-pub').addEventListener('click', () => { pubOn = !pubOn; $('b-pub').setAttribute('aria-pressed', pubOn); loadPub(); });
 map.on('moveend', () => { if (pubOn) { clearTimeout(pubTimer); pubTimer = setTimeout(loadPub, 350); } });
+
+// ---- power grid: the three interconnections (shipped with the page) and live transmission lines ----
+const GRID_COL = {Eastern: css('--g-east'), Western: css('--g-west'), 'Texas (ERCOT)': css('--g-tx')};
+let gridOn = false, gridLayer = null, lineLayer = null, lineSeq = 0, lineTimer = null;
+function inRings(lon, lat, rings) { let inside = false;
+  for (const ring of rings) for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside; }
+  return inside; }
+const gridOf = r => { if (!D.grid) return ''; const g = D.grid.regions.find(x => inRings(r[1], r[0], x.rings)); return g ? g.name : ''; };
+map.createPane('grid'); map.getPane('grid').style.zIndex = 360;
+const gridRenderer = L.canvas({pane: 'grid'});
+function drawGrid() {
+  if (gridLayer) { gridLayer.remove(); gridLayer = null; }
+  if (!gridOn || !D.grid) return;
+  gridLayer = L.layerGroup(D.grid.regions.map(g => L.polygon(g.rings.map(ring => ring.map(([x, y]) => [y, x])),
+    {renderer: gridRenderer, color: GRID_COL[g.name], weight: 2.5, dashArray: '10 6', fillColor: GRID_COL[g.name], fillOpacity: 0.07, interactive: false})))
+    .addTo(map);
+}
+async function loadLines() {
+  const seq = ++lineSeq; legend();
+  if (!gridOn || !TILES || map.getZoom() < 7) { if (lineLayer) { lineLayer.remove(); lineLayer = null; } return; }
+  const b = map.getBounds().pad(0.1), z = map.getZoom(), tol = 360 / (256 * 2 ** z) * 2;
+  try {
+    const g = await fetch(D.grid.lines + '/query?' + new URLSearchParams({where: z < 9 ? 'VOLTAGE >= 220' : 'VOLTAGE >= 100', outFields: 'VOLTAGE,OWNER',
+      f: 'geojson', geometry: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(','), geometryType: 'esriGeometryEnvelope',
+      inSR: 4326, outSR: 4326, maxAllowableOffset: tol, geometryPrecision: 5, resultRecordCount: 2000})).then(r => r.json());
+    if (seq !== lineSeq) return;
+    const col = v => v >= 345 ? css('--v-hi') : v >= 220 ? css('--v-mid') : css('--v-lo');
+    const next = L.geoJSON(g.features || [], {renderer: gridRenderer, interactive: false,
+      style: f => ({color: col(f.properties.VOLTAGE), weight: f.properties.VOLTAGE >= 345 ? 3 : f.properties.VOLTAGE >= 220 ? 2 : 1.2, opacity: 0.85})});
+    if (lineLayer) lineLayer.remove(); lineLayer = next.addTo(map);
+  } catch (e) { /* no signal or the service is busy: keep what is drawn */ }
+}
+$('b-grid').addEventListener('click', () => { gridOn = !gridOn; $('b-grid').setAttribute('aria-pressed', gridOn); drawGrid(); loadLines(); });
+map.on('moveend', () => { if (gridOn) { clearTimeout(lineTimer); lineTimer = setTimeout(loadLines, 350); } });
 
 // ---- filters ----
 $('sigs').innerHTML = CATS.map((c, k) => `<label class="sig"><input type="checkbox" id="c-${c.id}" data-k="${k}" checked>
