@@ -1399,6 +1399,37 @@ function tripFor(p) {                      // everything about getting from the 
     url: `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lon}&destination=${p.lat},${p.lon}&travelmode=driving&avoid=highways`
       + (stops.length ? '&waypoints=' + stops.map(s => s.land ? s.land.lat + ',' + s.land.lon : s.lat + ',' + s.lon).join('%7C') : '')};
 }
+// ---- saving topo maps for a whole trip ----
+let saveTopo = null;                       // set once the offline copy is saved (the service worker does the storing)
+const tileX = (lon, z) => Math.floor((lon + 180) / 360 * 2 ** z);
+const tileY = (lat, z) => Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** z);
+function routeTiles(p, t) {
+  // Overview along the whole line (a wide band, since real roads wander off it), then close-up squares
+  // around the start, every stopover and the destination. Returns the tile URLs, trimmed to a sane total.
+  const pts = [[home.lat, home.lon], ...t.stops.map(s => s.land ? [s.land.lat, s.land.lon] : [s.lat, s.lon]), [p.lat, p.lon]];
+  const build = bands => { const set = new Set();
+    const box = (lat, lon, mi, zs) => { const dl = mi / 69.05, dn = mi / (69.17 * Math.cos(lat * Math.PI / 180));
+      for (const z of zs) for (let x = tileX(lon - dn, z); x <= tileX(lon + dn, z); x++) for (let y = tileY(lat + dl, z); y <= tileY(lat - dl, z); y++)
+        set.add(`${USGS_TOPO}/tile/${z}/${y}/${x}`); };
+    for (let k = 0; k < pts.length - 1; k++) { const [a, b] = [pts[k], pts[k + 1]];
+      const mi = Math.hypot((b[1] - a[1]) * 69.17 * Math.cos(a[0] * Math.PI / 180), (b[0] - a[0]) * 69.05), n = Math.max(1, Math.ceil(mi / 6));
+      for (let j = 0; j <= n; j++) { const lat = a[0] + (b[0] - a[0]) * j / n, lon = a[1] + (b[1] - a[1]) * j / n;
+        for (const [half, zs] of bands) box(lat, lon, half, zs); } }
+    box(home.lat, home.lon, 10, [11, 12]);
+    t.stops.forEach(s => { const c = s.land ? [s.land.lat, s.land.lon] : [s.lat, s.lon]; box(c[0], c[1], 10, [12]); box(c[0], c[1], 7, [13]); box(c[0], c[1], 4, [14]); });
+    box(p.lat, p.lon, 10, [12]); box(p.lat, p.lon, 8, [13]); box(p.lat, p.lon, 5, [14]); box(p.lat, p.lon, 2.5, [15]);
+    return [...set]; };
+  const full = [[25, [7, 8, 9, 10]], [12, [11]], [6, [12]]];
+  for (const bands of [full, full.slice(0, 2), full.slice(0, 1)]) { const u = build(bands); if (u.length <= 4000) return u; }   // very long trips keep less of the close-in band
+  return build([[25, [7, 8, 9]]]);
+}
+function saveRoute() {
+  const p = plan[act], tell = t => { $('pl-msg').textContent = t; };
+  if (!p || !home) return;
+  if (!saveTopo) { tell(SITE ? 'Tap Save for offline use (top of the page) first, then save the route maps.' : 'Saving maps needs the public site; this copy cannot store them.'); return; }
+  const urls = routeTiles(p, tripFor(p));
+  saveTopo(urls, tell, `the ${TIERS[act].name.toLowerCase()} route`);
+}
 const hrs = h => h < 1 ? Math.round(h * 60) + ' min' : h.toFixed(1).replace('.0', '') + ' h';
 function tripText(p, t) {                  // plain-language lines, shared by the screen and the copied sheet
   const out = {head: `${fmt(t.straight)} miles in a straight line, about ${fmt(t.road)} by road, roughly ${hrs(t.hours)} at back-road pace.`};
@@ -1431,7 +1462,8 @@ function renderPlan() {
   const t = tripFor(p), x = tripText(p, t);
   box.innerHTML = `<div class="trip"><div><h4>${TIERS[act].name}: ${esc(p.title)}</h4><div class="big">${fmt(t.road)} road miles &middot; ${hrs(t.hours)}</div>
       <div class="s">${esc(x.head)}</div><div style="margin-top:6px">${esc(x.fuel)}</div>
-      <div class="links"><a href="${t.url}" target="_blank" rel="noopener">Open route in Google Maps (avoiding highways)</a></div></div>
+      <div class="links"><a href="${t.url}" target="_blank" rel="noopener">Open route in Google Maps (avoiding highways)</a></div>
+      ${SITE ? '<div class="row" style="margin-top:8px"><button class="primary" data-saveroute="1">Save maps for this route</button></div><div class="s" style="margin-top:4px">Stores the topo map for a 50-mile-wide band along the direct line, plus close-ups of your start, each stopover and the destination, for use with no signal. If your road route swings wider than that, also use Save this map area there.</div>' : ''}</div>
     <div><h4>Stopovers</h4>${x.stops.length ? '<ol>' + x.stops.map(s => `<li>${esc(s.replace(/^Stop \d+, /, ''))}</li>`).join('') + '</ol>'
       : '<div class="s">None needed: the trip fits in one tank.</div>'}${x.stops.length ? '<div class="s" style="margin-top:6px">Stopovers are the nearest public land to each leg break, located to within a few miles. Some BLM and forest parcels are small, landlocked or closed to camping, so confirm access and the rules for each one before you rely on it.</div>' : ''}</div>
     <div><h4>What the direct line crosses</h4>${x.cities.length || x.roads.length ? '<ul>' + x.cities.concat(x.roads).map(s => `<li>${esc(s)}</li>`).join('') + '</ul>'
@@ -1467,6 +1499,7 @@ document.addEventListener('click', e => {
     document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'}); }
   else if (drop) { plan[+drop.dataset.drop] = null; savePlan(); renderPlan(); }
   else if (go) { e.preventDefault(); openSite(+go.dataset.go, 13); }
+  else if (e.target.closest('[data-saveroute]')) saveRoute();
 });
 ['v-range', 'v-tank'].forEach(id => $(id).addEventListener('change', () => { try { localStorage.setItem('bo-vehicle', JSON.stringify([$('v-range').value, $('v-tank').value])); } catch (e) {} renderPlan(); }));
 try { const vv = JSON.parse(localStorage.getItem('bo-vehicle') || 'null'); if (vv) { $('v-range').value = vv[0]; $('v-tank').value = vv[1]; } } catch (e) {}
@@ -1699,7 +1732,7 @@ ft.addEventListener('click', () => { const closed = document.querySelector('asid
 // ---- offline copy (public site only): keeps the page, site list and viewed USGS maps on this device ----
 if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
   const btn = $('off-save'), st = $('off-state'), say = t => { st.hidden = false; st.textContent = t; };
-  const saved = () => { btn.hidden = true; $('off-area').hidden = false;
+  const saved = () => { btn.hidden = true; $('off-area').hidden = false; saveTopo = saveTopoImpl;   // maps can be stored from now on
     say('Saved on this device. Opens without signal; add it to your home screen to find it again.'); };
   btn.hidden = false;
   navigator.serviceWorker.getRegistration().then(r => { if (r && r.active) saved(); });
@@ -1710,24 +1743,29 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
       saved(); }
     catch (e) { btn.disabled = false; btn.textContent = 'Save for offline use'; say('Could not save: the browser blocked it or the device is out of space.'); }
   });
-  $('off-area').addEventListener('click', async () => {      // download the USGS topo map for what is on screen, a few zoom levels deep
-    const b = map.getBounds(), z0 = Math.max(6, Math.min(13, Math.round(map.getZoom()))), z1 = Math.min(16, z0 + 3), urls = [];
-    const tx = (lon, z) => Math.floor((lon + 180) / 360 * 2 ** z);
-    const ty = (lat, z) => Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** z);
-    for (let z = z0; z <= z1; z++) for (let x = tx(b.getWest(), z); x <= tx(b.getEast(), z); x++)
-      for (let y = ty(b.getNorth(), z); y <= ty(b.getSouth(), z); y++) urls.push(`${USGS_TOPO}/tile/${z}/${y}/${x}`);
-    if (urls.length > 2500) { say(`Zoom in closer first: this view needs ${fmt(urls.length)} map tiles and one save is limited to 2,500.`); return; }
-    const total = urls.length; let done = 0, fail = 0; $('off-area').disabled = true;
+  // Fetch a list of topo tiles; the service worker stores each one as it arrives.
+  let savingTiles = false;
+  const saveTopoImpl = async (urls, tell, what) => {
+    if (savingTiles) { tell('Another map save is still running. Wait for it to finish.'); return; }
+    savingTiles = true;
+    const total = urls.length, mb = Math.round(total * 0.025); let done = 0, fail = 0;
+    tell(`Saving ${what}: ${fmt(total)} map tiles, about ${mb} MB…`);
     const work = async () => { while (urls.length) { const u = urls.pop();
       try { if (!(await fetch(u, {mode: 'cors'})).ok) fail++; } catch (e) { fail++; }
-      if (++done % 25 === 0) say(`Saving topo map: ${fmt(done)} of ${fmt(total)} tiles…`); } };
+      if (++done % 25 === 0) tell(`Saving ${what}: ${fmt(done)} of ${fmt(total)} tiles…`); } };
     await Promise.all(Array.from({length: 6}, work));
-    $('off-area').disabled = false;
-    say(fail ? `Saved ${fmt(total - fail)} of ${fmt(total)} topo tiles for this area; ${fmt(fail)} could not be fetched. Try again with signal.`
-      : `Topo map saved for this area (${fmt(total)} tiles, down to zoom ${z1}). Switch the map to Topo to use it offline.`);
+    savingTiles = false;
+    tell(fail ? `Saved ${fmt(total - fail)} of ${fmt(total)} topo tiles for ${what}; ${fmt(fail)} could not be fetched. Try again with signal.`
+      : `Topo maps saved for ${what} (${fmt(total)} tiles). Switch the map to Topo to use them offline.`);
+  };
+  $('off-area').addEventListener('click', () => {            // the USGS topo map for what is on screen, a few zoom levels deep
+    const b = map.getBounds(), z0 = Math.max(6, Math.min(13, Math.round(map.getZoom()))), z1 = Math.min(16, z0 + 3), urls = [];
+    for (let z = z0; z <= z1; z++) for (let x = tileX(b.getWest(), z); x <= tileX(b.getEast(), z); x++)
+      for (let y = tileY(b.getNorth(), z); y <= tileY(b.getSouth(), z); y++) urls.push(`${USGS_TOPO}/tile/${z}/${y}/${x}`);
+    if (urls.length > 2500) { say(`Zoom in closer first: this view needs ${fmt(urls.length)} map tiles and one save is limited to 2,500.`); return; }
+    saveTopoImpl(urls, say, 'this area');
   });
 }
-if (!Object.keys(LAW).length) $('carry-row').hidden = true;      // no state law table in this build
 legend(); fillStates(); apply(false); renderPlan();
 try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
 }
