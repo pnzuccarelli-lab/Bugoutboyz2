@@ -22,8 +22,8 @@
   --land: #1e2418; --water: #0d100b; --border-st: #6f7658; --border-co: #333a27;
   --accent: #f2a33a; --accent-ink: #15170f; --flare: #e8603a;
   --t-prime: #f2a33a; --t-strong: #9ccb5e; --t-viable: #cfc48a; --t-low: #7d8070;
-  --p-water: #5aa9e6; --p-remote: #f2a33a; --p-room: #9ccb5e; --p-shelter: #dc8463; --p-resupply: #b596e6; --p-obtain: #d8d3bd;
-  --p-safety: #e6d15a; --p-public: #46b58c;
+  --p-water: #5aa9e6; --p-remote: #f2a33a; --p-room: #c8b08a; --p-shelter: #dc8463; --p-obtain: #9fb4c7;
+  --p-safety: #e6d15a; --p-public: #46b58c; --p-grow: #7ac74f; --p-support: #b596e6;
   --l-fs: #4f9f5a; --l-blm: #c9a94f; --l-nps: #9a82e0; --l-fws: #4aa9b0; --l-state: #86c2a0;
   --c-escheat: #f06292; --c-gov_surplus: #a98be8; --c-tax_sale: #f59a4a; --c-estate_owner: #62a8f2;
   --c-land_bank: #3fc4b2; --c-tax_delinquent: #b9be6a;
@@ -897,7 +897,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
     </section>
     <section>
-      <h2>Survival</h2>
+      <h2>Land &amp; water</h2>
       <div class="stack">
         <label class="fl" for="f-score">Minimum bug-out score <b id="scv" style="color:var(--ink)">0</b>
           <input type="range" id="f-score" min="0" max="95" step="5" value="0"></label>
@@ -905,18 +905,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <option value="-1" selected>Any distance</option><option value="402">Within &frac14; mile (5 min walk)</option>
           <option value="805">Within &frac12; mile (10 min walk)</option><option value="1609">Within 1 mile (20 min walk)</option>
         </select></label>
-        <label class="fl" for="f-dist">Distance from a city of 50,000+<select id="f-dist">
-          <option value="0" selected>Any distance</option><option value="25">25+ miles out</option>
-          <option value="50">50+ miles out</option><option value="100">100+ miles out</option></select></label>
+        <label class="fl" for="f-grow">Growing season (frost-free)<select id="f-grow">
+          <option value="0" selected>Any length</option><option value="90">90+ days</option><option value="120">120+ days</option>
+          <option value="150">150+ days</option><option value="180">180+ days</option></select></label>
+        <label class="fl" for="f-rain">Rainfall a year<select id="f-rain">
+          <option value="0" selected>Any amount</option><option value="15">15+ inches</option><option value="25">25+ inches</option>
+          <option value="35">35+ inches</option></select></label>
         <label class="fl" for="f-pub">Public land next door<select id="f-pub">
           <option value="-1" selected>Any</option><option value="400">Borders it (within &frac14; mile)</option>
           <option value="1609">Within 1 mile</option><option value="3219">Within 2 miles</option></select></label>
-        <label class="fl" for="f-haz">Natural hazards in the county<select id="f-haz">
-          <option value="9" selected>Any</option><option value="1">No hazard rated high</option>
-          <option value="0">None rated high or elevated</option></select></label>
-        <label class="fl" for="f-nuke">Distance from a nuclear plant<select id="f-nuke">
-          <option value="0" selected>Any distance</option><option value="25">25+ miles</option>
-          <option value="50">50+ miles</option><option value="100">100+ miles</option></select></label>
         <label class="fl" for="f-bldg">Shelter on the land<select id="f-bldg">
           <option value="any" selected>Any</option><option value="house">House-sized building (500+ sq ft)</option>
           <option value="some">Any building</option><option value="none">No building detected (raw land)</option>
@@ -925,6 +922,31 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <ul><li>It finds building outlines from aerial imagery. A barn, shop, garage or ruin counts the same as a house.</li>
           <li>We only know each site's centre point, not its boundary. A building counts when its centre is within 50 m (about 165 ft) of that point, so a house set back on a large parcel can be missed and a neighbour's building on a small lot can be counted.</li>
           <li>Footprints can be several years old. Check the photo and the county record.</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Keep away from</h2>
+      <div class="stack">
+        <label class="fl" for="f-dist">Cities of 50,000+<select id="f-dist">
+          <option value="0" selected>Any distance</option><option value="25">25+ miles out</option>
+          <option value="50">50+ miles out</option><option value="100">100+ miles out</option></select></label>
+        <label class="fl" for="f-road">Interstates<select id="f-road">
+          <option value="0" selected>Any distance</option><option value="5">5+ miles off</option>
+          <option value="10">10+ miles off</option><option value="20">20+ miles off</option></select></label>
+        <label class="fl" for="f-haz">Natural hazards in the county<select id="f-haz">
+          <option value="9" selected>Any</option><option value="1">No hazard rated high</option>
+          <option value="0">None rated high or elevated</option></select></label>
+        <label class="fl" for="f-nuke">Nuclear plants<select id="f-nuke">
+          <option value="0" selected>Any distance</option><option value="25">25+ miles</option>
+          <option value="50">50+ miles</option><option value="100">100+ miles</option></select></label>
+      </div>
+    </section>
+    <section>
+      <h2>Keep within reach</h2>
+      <div class="stack">
+        <label class="fl" for="f-hosp">A hospital<select id="f-hosp">
+          <option value="999" selected>Any distance</option><option value="15">Within 15 miles</option>
+          <option value="30">Within 30 miles</option><option value="60">Within 60 miles</option></select></label>
       </div>
     </section>
     <section>
@@ -944,7 +966,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <section>
       <h2>How the score works</h2>
       <div class="key" id="key"></div>
-      <p class="note" style="margin-top:10px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil and growing season, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
+      <p class="note" style="margin-top:10px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil quality, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
     </section>
   </aside>
   <main>
@@ -954,6 +976,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <button data-pick="raw" aria-pressed="false">Raw land<small>No building, water, 25+ mi out</small></button>
       <button data-pick="pub" aria-pressed="false">Backs onto public land<small>Forest, BLM or park in &frac14; mile</small></button>
       <button data-pick="safe" aria-pressed="false">Low hazard<small>No high hazards, 50+ mi from a reactor</small></button>
+      <button data-pick="grow" aria-pressed="false">Grow your own<small>150+ day season, 25+ in rain, water in 1 mi</small></button>
+      <button data-pick="family" aria-pressed="false">Family ready<small>House, hospital in 30 mi, off the interstate</small></button>
       <button data-pick="easy" aria-pressed="false">Easiest to get<small>Government already holds it</small></button>
     </div>
     <div class="kpis">
@@ -990,7 +1014,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div class="warn" id="bldg-banner" style="margin-top:8px" hidden></div>
       <div class="tw" style="margin-top:8px"><table>
-        <thead><tr><th>Score</th><th id="th-pic" hidden>Photo</th><th>Site</th><th>Water &amp; public land</th><th>Hazards</th><th>Shelter (est.)</th><th>Cities<span id="th-you" hidden> &amp; you</span></th><th>How to get it</th><th>Coordinates</th></tr></thead>
+        <thead><tr><th>Score</th><th id="th-pic" hidden>Photo</th><th>Site</th><th>Water &amp; land</th><th>Hazards</th><th>Shelter &amp; care</th><th>Cities<span id="th-you" hidden> &amp; you</span></th><th>How to get it</th><th>Coordinates</th></tr></thead>
         <tbody id="rows"></tbody>
       </table></div>
     </section>
@@ -1017,14 +1041,17 @@ const CATS = D.cats;                       // ways a site could be acquired, in 
 //       18 buildingSqft (-1 unchecked), 19 score parts (one char each, code-48), 20 milesToCity50k, 21 cityIdx,
 //       22 countyPeoplePerSqMi (-1 unknown), 23 leadScore, 24 hazard levels (one digit per D.hazards: 0 none, 1 elevated, 2 high),
 //       25 milesToNuclearPlant, 26 plantNameIdx, 27 milesToMilitaryBase, 28 baseNameIdx,
-//       29 publicLandMeters (-1 none within 2 miles), 30 publicLandNameIdx, 31 publicLandKind (index into D.kinds)]
+//       29 publicLandMeters (-1 none within 2 miles), 30 publicLandNameIdx, 31 publicLandKind (index into D.kinds),
+//       32 milesToInterstate (99 = 99+), 33 routeNameIdx, 34 milesToHospital (99 = 99+), 35 hospitalNameIdx,
+//       36 growingSeasonDays (-1 unknown), 37 rainfallInches (-1 unknown), 38 milesToWeatherStation]
 const R = D.rows, PAGE = 25;
 const SETTING = ['Rural', 'Small town', 'Urban'];
-const PART_LABEL = {water: 'Water', remote: 'Remoteness', safety: 'Safety', room: 'Elbow room', shelter: 'Shelter', public: 'Public land',
-  resupply: 'Resupply', obtain: 'Obtainable'};
-const PART_HELP = {water: 'perennial fresh water within a mile', remote: 'miles from cities of 50k and 250k+',
-  safety: 'few natural hazards, no reactor or big base nearby', room: 'few people per square mile', shelter: 'a building already standing',
-  public: 'forest, BLM or park land next door', resupply: 'a town within 12 miles', obtain: 'a public-record path to buy it'};
+const PART_LABEL = {water: 'Water', remote: 'Remoteness', safety: 'Safety', grow: 'Growing', room: 'Elbow room', obtain: 'Obtainable',
+  shelter: 'Shelter', public: 'Public land', support: 'Support'};
+const PART_HELP = {water: 'perennial fresh water within a mile', remote: 'far from cities and off the interstates',
+  safety: 'few natural hazards, no reactor or big base nearby', grow: 'long frost-free season and enough rain',
+  room: 'few people per square mile', obtain: 'a public-record path to buy it', shelter: 'a building already standing',
+  public: 'forest, BLM or park land next door', support: 'a town and a hospital within reach'};
 const ST = {};  TOPO.objects.states.geometries.forEach(g => ST[g.id] = g.properties.name);
 const CO = {};  TOPO.objects.counties.geometries.forEach(g => CO[g.id] = g.properties.name);
 const ABBR = D.abbr;
@@ -1057,6 +1084,10 @@ const hazChips = r => {
 };
 const pubName = r => { const n = D.names[r[30]], k = D.kinds[r[31]] || 'public land'; return !n || /^Bureau of Land/.test(n) ? k : n; };
 const pub = r => r[29] < 0 ? '' : (r[29] <= 100 ? 'Borders ' : miles(r[29]) + ' to ') + pubName(r);
+const road = r => r[32] >= 99 ? 'No interstate within 99 mi' : `${r[32]} mi from ${D.names[r[33]] || 'an interstate'}`;
+const hosp = r => r[34] >= 99 ? 'No hospital within 99 mi' : `Hospital ${r[34]} mi`;
+const clim = r => r[36] < 0 && r[37] < 0 ? '' : [r[36] < 0 ? '' : (r[36] >= 365 ? 'year-round' : r[36] + '-day') + ' growing season',
+  r[37] < 0 ? '' : r[37] + ' in rain a year'].filter(Boolean).join(' · ');
 const far = r => `${fmt(r[20])} mi from ${D.bigs[r[21]] || 'a city'}`;
 const dens = r => r[22] < 0 ? '' : (r[22] < 1 ? 'under 1 person' : fmt(r[22]) + (r[22] === 1 ? ' person' : ' people')) + ' per sq mi in county';
 // r[18]: footprint (sq ft) of the largest building centred within 50 m of the point; 0 none; -1 not checked
@@ -1136,9 +1167,11 @@ function popup(i) {
     <dt>Public land</dt><dd>${esc(pub(r)) || 'None within two miles'}${r[29] >= 0 ? `<br><span class="s">${esc(D.kinds[r[31]] || '')}</span>` : ''}</dd>
     <dt>Hazards</dt><dd>${hazChips(r)}<span class="s" style="display:block;margin-top:2px">Nearest reactor ${r[25] >= 999 ? 'over 999' : r[25]} mi (${esc(D.names[r[26]])})</span></dd>
     ${home ? `<dt>From you</dt><dd>${fromYou(i)}</dd>` : ''}
-    <dt>Cities</dt><dd>${esc(far(r))}${dens(r) ? '<br><span class="s">' + esc(dens(r)) + '</span>' : ''}</dd>
+    <dt>Growing</dt><dd>${esc(clim(r)) || 'No weather station within 60 miles'}${r[38] >= 0 ? `<br><span class="s">from weather stations, nearest ${r[38]} mi away</span>` : ''}</dd>
+    <dt>Cities</dt><dd>${esc(far(r))}<br><span class="s">${esc(road(r))}${dens(r) ? ' · ' + esc(dens(r)) : ''}</span></dd>
+    <dt>Hospital</dt><dd>${r[34] >= 99 ? 'None within 99 miles' : `${r[34]} mi<br><span class="s">${esc(D.names[r[35]])}</span>`}</dd>
     <dt>Shelter</dt><dd>${bldg(r)}</dd>
-    ${D.cities[r[15]] ? `<dt>Resupply</dt><dd>${esc(D.cities[r[15]])}</dd>` : ''}
+    ${D.cities[r[15]] ? `<dt>Town</dt><dd>${esc(D.cities[r[15]])}</dd>` : ''}
     <dt>Lat, long</dt><dd class="id">${ll(r)}</dd></dl>
     <div class="chips">${getChips(r)}</div>
     <dl>${r[6] ? `<dt>Owner</dt><dd>${esc(r[6])}</dd>` : ''}
@@ -1260,9 +1293,11 @@ if (D.total > R.length) $('capnote').textContent = ` (top by score of ${fmt(D.to
 const NOTOWN = 'No town within 12 miles';
 if (D.public) $('f-q').placeholder = 'Address or parcel ID';   // public copies carry no owner names
 const F = () => ({set: +$('f-set').value, wm: +$('f-water').value, bf: $('f-bldg').value, dist: +$('f-dist').value,
-  pub: +$('f-pub').value, haz: +$('f-haz').value, nuke: +$('f-nuke').value});
+  pub: +$('f-pub').value, haz: +$('f-haz').value, nuke: +$('f-nuke').value, road: +$('f-road').value, hosp: +$('f-hosp').value,
+  grow: +$('f-grow').value, rain: +$('f-rain').value});
 const baseOk = (r, f) => r[14] <= f.set && !(f.wm > 0 && (r[16] < 0 || r[16] > f.wm)) && r[20] >= f.dist && bldgOk(r, f.bf)
-  && !(f.pub > 0 && (r[29] < 0 || r[29] > f.pub)) && hazMax(r) <= f.haz && r[25] >= f.nuke;
+  && !(f.pub > 0 && (r[29] < 0 || r[29] > f.pub)) && hazMax(r) <= f.haz && r[25] >= f.nuke
+  && r[32] >= f.road && r[34] <= f.hosp && r[36] >= f.grow && r[37] >= f.rain;
 function fillStates() {                    // state and acquisition tallies follow the survival choices
   const f = F(), counts = CATS.map(() => 0), states = {}, cur = $('f-state').value;
   for (const r of R) { if (!baseOk(r, f)) continue;
@@ -1344,9 +1379,9 @@ function table() {
     return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
       ${TILES ? `<td class="pic">${photo(r, 96, 64, 15)}</td>` : ''}
       <td class="site"><div class="t1">${esc(title(r))}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${r[12] && r[5] ? `<div class="s id">${esc(r[12])}</div>` : ''}</td>
-      <td>${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div></td>
-      <td>${hazChips(r)}</td><td>${bldg(r)}</td>
-      <td>${esc(far(r))}${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
+      <td>${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
+      <td>${hazChips(r)}</td><td>${bldg(r)}<div class="s" style="margin-top:3px">${esc(hosp(r))}</div></td>
+      <td>${esc(far(r))}<div class="s">${esc(road(r))}</div>${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
       <td class="get"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}</td>
       <td class="geo"><span class="id">${ll(r)}</span><div class="s"><a href="${gdirHome(r)}" target="_blank" rel="noopener">Drive there</a> &middot; <a href="${gmap(r)}" target="_blank" rel="noopener">Map</a> &middot; <a href="${gearth(r)}" target="_blank" rel="noopener">Earth</a></div></td></tr>`; }).join('')
     || '<tr><td colspan="9" class="s" style="cursor:default">Nothing in this map view matches. Zoom out or loosen the filters.</td></tr>';
@@ -1363,7 +1398,7 @@ $('l-sort').addEventListener('change', listings);
 function setMode(m) { mode = m; $('m-heat').setAttribute('aria-pressed', m === 'heat'); $('m-pts').setAttribute('aria-pressed', m === 'points'); syncLayers(); }
 $('m-heat').addEventListener('click', () => setMode('heat')); $('m-pts').addEventListener('click', () => setMode('points'));
 const unpick = () => document.querySelectorAll('.picks button').forEach(b => b.setAttribute('aria-pressed', 'false'));
-['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke'].forEach(id => $(id).addEventListener('change', fillStates));
+['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke', 'f-road', 'f-hosp', 'f-grow', 'f-rain'].forEach(id => $(id).addEventListener('change', fillStates));
 $('f-state').addEventListener('change', () => { $('f-city').value = ''; fillCities(); });
 document.querySelectorAll('aside input:not(#sp-q), aside select').forEach(el =>
   el.addEventListener(el.type === 'search' ? 'input' : 'change', () => { unpick(); apply(true); }));
@@ -1372,7 +1407,8 @@ function clear() {
   document.querySelectorAll('#sigs input').forEach(c => c.checked = true);
   $('f-estate').checked = $('f-stack').checked = false; $('f-score').value = 0; $('f-age').value = '99'; $('f-q').value = '';
   $('f-set').value = '0'; $('f-water').value = '-1'; $('f-bldg').value = 'any'; $('f-dist').value = '0';
-  $('f-pub').value = '-1'; $('f-haz').value = '9'; $('f-nuke').value = '0'; unpick();
+  $('f-pub').value = '-1'; $('f-haz').value = '9'; $('f-nuke').value = '0';
+  $('f-road').value = '0'; $('f-hosp').value = '999'; $('f-grow').value = '0'; $('f-rain').value = '0'; unpick();
 }
 $('reset').addEventListener('click', () => { clear(); $('f-reach').value = '0'; $('f-cross').checked = false; $('f-state').value = ''; fillStates(); apply(false); map.setView([39.5, -98.5], 4); });
 const PICKS = {                            // one-tap briefs; the state and town choice is kept
@@ -1381,6 +1417,8 @@ const PICKS = {                            // one-tap briefs; the state and town
   raw: () => { $('f-bldg').value = 'none'; $('f-water').value = '805'; $('f-dist').value = '25'; },
   pub: () => { $('f-pub').value = '400'; },
   safe: () => { $('f-haz').value = '1'; $('f-nuke').value = '50'; },
+  grow: () => { $('f-grow').value = '150'; $('f-rain').value = '25'; $('f-water').value = '1609'; },
+  family: () => { $('f-hosp').value = '30'; $('f-bldg').value = 'house'; $('f-road').value = '5'; },
   easy: () => document.querySelectorAll('#sigs input').forEach(c => c.checked = !!(GOV & (1 << +c.dataset.k))),
 };
 document.querySelectorAll('.picks button').forEach(b => b.addEventListener('click', () => {
@@ -1389,12 +1427,12 @@ document.querySelectorAll('.picks button').forEach(b => b.addEventListener('clic
   fillStates(); apply(false); }));
 function csvText(limit) {
   const rows = [['bug_out_score', ...D.parts.map(p => 'pts_' + p), 'setting', 'address', 'nearest_town', 'county', 'state', 'water_name', 'water_meters',
-    'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'public_land', 'public_land_meters', 'hazards', 'miles_to_nuclear_plant', 'miles_from_start', 'line_crosses_city', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
+    'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'public_land', 'public_land_meters', 'miles_to_interstate', 'interstate', 'miles_to_hospital', 'hospital', 'growing_season_days', 'rainfall_inches', 'hazards', 'miles_to_nuclear_plant', 'miles_from_start', 'line_crosses_city', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
     'lat', 'lon', 'directions', 'list', 'list_updated', 'source']];
   const take = inView.slice(0, limit);
   for (const i of take) { const r = R[i], ly = D.layers[r[9]];
     rows.push([r[2], ...parts(r), SETTING[r[14]], r[5], D.cities[r[15]], CO[r[7]] || '', ABBR[r[7].slice(0, 2)] || '', D.waters[r[17]], r[16] < 0 ? '' : r[16],
-      r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[29] < 0 ? '' : pubName(r), r[29] < 0 ? '' : r[29],
+      r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[29] < 0 ? '' : pubName(r), r[29] < 0 ? '' : r[29], r[32], D.names[r[33]], r[34], D.names[r[35]], r[36] < 0 ? '' : r[36], r[37] < 0 ? '' : r[37],
       D.hazards.filter((h, k) => +r[24][k]).map((h, k2) => h).join('; '), r[25], home ? Math.round(dist[i]) : '', home && cross[i] >= 0 ? D.metros[cross[i]][0] : '', r[18] < 0 ? '' : r[18], CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.id).join(' ') + ((r[4] & 1) ? ' estate' : ''),
       r[6], r[12], r[8] || '', r[11], r[0], r[1], gdir(r), ly.s, ly.d, ly.u]); }
   return [rows.map(r => r.map(v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(',')).join('\n'), take.length];
@@ -1403,7 +1441,7 @@ function kmlText(limit) {                  // opens in Google Earth, Organic Map
   const take = inView.slice(0, limit);
   const pm = take.map(i => { const r = R[i];
     return `<Placemark><name>${esc(r[2] + ' · ' + title(r))}</name><description>${esc(['Bug-out score ' + r[2] + ' (' + tier(r[2])[0] + ')', place(r),
-      water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), far(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
+      water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), clim(r), far(r), road(r), hosp(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
       CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.label).join('; '), r[6] && 'Owner: ' + r[6], r[12] && 'Parcel: ' + r[12],
       r[8] ? 'Owed: ' + money(r[8]) : ''].filter(Boolean).join('\n'))}</description><Point><coordinates>${r[1]},${r[0]},0</coordinates></Point></Placemark>`; }).join('\n');
   return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Bug Out Boyz sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
@@ -1437,7 +1475,7 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
   btn.hidden = false;
   navigator.serviceWorker.getRegistration().then(r => { if (r && r.active) saved(); });
   btn.addEventListener('click', async () => {
-    btn.disabled = true; btn.textContent = 'Saving, about 44 MB…';
+    btn.disabled = true; btn.textContent = 'Saving, about 50 MB…';
     try { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready;
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
       saved(); }
