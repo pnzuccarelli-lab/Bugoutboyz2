@@ -24,7 +24,7 @@
   --t-prime: #f2a33a; --t-strong: #9ccb5e; --t-viable: #cfc48a; --t-low: #7d8070;
   --p-water: #5aa9e6; --p-remote: #f2a33a; --p-room: #c8b08a; --p-shelter: #dc8463; --p-obtain: #9fb4c7;
   --p-safety: #e6d15a; --p-public: #46b58c; --p-grow: #7ac74f; --p-community: #b596e6; --p-laws: #e08fb8;
-  --l-fs: #4f9f5a; --l-blm: #c9a94f; --l-nps: #9a82e0; --l-fws: #4aa9b0; --l-state: #86c2a0;
+  --l-game: #d9734a; --l-fs: #4f9f5a; --l-blm: #c9a94f; --l-nps: #9a82e0; --l-fws: #4aa9b0; --l-state: #86c2a0;
   --c-escheat: #f06292; --c-gov_surplus: #a98be8; --c-tax_sale: #f59a4a; --c-estate_owner: #62a8f2;
   --c-land_bank: #3fc4b2; --c-tax_delinquent: #b9be6a;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -986,6 +986,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <dt>Titled to an estate / heirs</dt><dd>The recorded owner has died. An administrator or the heirs may be willing to sell.</dd>
       <dt>Land bank</dt><dd>A public agency that takes abandoned property and sells it cheaply.</dd>
       <dt>Tax delinquent</dt><dd>Taxes are overdue but the property has not gone to auction yet.</dd>
+      <dt>Hunting land</dt><dd>National forest, BLM land, national wildlife refuges, and state wildlife management areas and game lands (from the USGS Protected Areas Database). Hunting is generally allowed with a state licence, but seasons, species and closed areas vary by unit. Some states, Mississippi among them, have few state areas in the database.</dd>
       <dt>Downwind</dt><dd>East of a nuclear plant, big city or major base, where the usual west-to-east wind would carry fallout or smoke.</dd>
     </dl>
     <h3>How accurate is it</h3>
@@ -1040,6 +1041,9 @@ svg.leaflet-image-layer.leaflet-interactive path {
           <option value="0" selected>Any amount</option><option value="15">15+ inches</option><option value="25">25+ inches</option>
           <option value="35">35+ inches</option></select></label>
         <label class="fl" for="f-pub">Public land next door<select id="f-pub">
+          <option value="-1" selected>Any</option><option value="400">Borders it (within &frac14; mile)</option>
+          <option value="1609">Within 1 mile</option><option value="3219">Within 2 miles</option></select></label>
+        <label class="fl" for="f-hunt">Hunting land<select id="f-hunt">
           <option value="-1" selected>Any</option><option value="400">Borders it (within &frac14; mile)</option>
           <option value="1609">Within 1 mile</option><option value="3219">Within 2 miles</option></select></label>
         <label class="fl" for="f-bldg">Shelter on the land<select id="f-bldg">
@@ -1115,6 +1119,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       <button data-pick="ready" aria-pressed="false">Move-in ready<small>Building + water in &frac12; mile</small></button>
       <button data-pick="raw" aria-pressed="false">Raw land<small>No building, water, 25+ mi out</small></button>
       <button data-pick="pub" aria-pressed="false">Backs onto public land<small>Forest, BLM or park in &frac14; mile</small></button>
+      <button data-pick="hunt" aria-pressed="false">Hunt &amp; fish<small>Hunting land and water within a mile</small></button>
       <button data-pick="safe" aria-pressed="false">Low hazard<small>No high hazards, 50+ mi from a reactor</small></button>
       <button data-pick="grow" aria-pressed="false">Grow your own<small>150+ day season, 25+ in rain, water in 1 mi</small></button>
       <button data-pick="family" aria-pressed="false">Family ready<small>House, town in 10 mi, hospital in 30</small></button>
@@ -1176,7 +1181,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <script src="lib/leaflet-heat.js"></script>
 <script src="lib/topojson.min.js"></script>
 <script>function __ld(i, n) { var e = document.getElementById('loading'); if (e) e.textContent = i > n ? 'Building the map…' : 'Loading the site list: part ' + i + ' of ' + n + '…'; }</script>
-<script>__ld(1, 4)</script><script src="scout-data.js"></script><script>__ld(2, 4)</script><script src="scout-rows-0.js"></script><script>__ld(3, 4)</script><script src="scout-rows-1.js"></script><script>__ld(4, 4)</script><script src="scout-rows-2.js"></script><script>__ld(5, 4)</script>
+<script>__ld(1, 5)</script><script src="scout-data.js"></script><script>__ld(2, 5)</script><script src="scout-rows-0.js"></script><script>__ld(3, 5)</script><script src="scout-rows-1.js"></script><script>__ld(4, 5)</script><script src="scout-rows-2.js"></script><script>__ld(5, 5)</script><script src="scout-rows-3.js"></script><script>__ld(6, 5)</script>
 <script>
 const TILES = true;
 const SITE = true;            // true on the installable public site (served over https)
@@ -1198,7 +1203,9 @@ const CATS = D.cats;                       // ways a site could be acquired, in 
 //       36 growingSeasonDays (-1 unknown), 37 rainfallInches (-1 unknown), 38 milesToWeatherStation,
 //       39 milesToTown (99 = none within 30), 40 townNameIdx, 41 townPopulation,
 //       42 downwind bits (1 = of a reactor within 50 mi, 2 = of a big city or base within 100 mi), 43 thatNameIdx, 44 itsMiles]
-//       45 best publisher type among the site's lists (0 government, 1 university or research, 2 not verified)
+//       45 best publisher type among the site's lists (0 government, 1 university or research, 2 not verified),
+//       46 huntingLandMeters (-1 none within 2 miles, or not measured), 47 huntingLandNameIdx, 48 huntingLandKind (index into D.kinds),
+//       49 acres (-1 when the source list does not give it)
 // Slots 22 and 24 arrive empty and are filled per county by expand().
 const R = D.rows, PAGE = 25;
 const SETTING = ['Rural', 'Small town', 'Urban'];
@@ -1243,6 +1250,9 @@ const hazChips = r => {
   return out.length ? `<div class="chips">${out.join('')}</div>` : '<span class="s">none flagged</span>';
 };
 const pubName = r => { const n = D.names[r[30]], k = D.kinds[r[31]] || 'public land'; return !n || /^Bureau of Land/.test(n) ? k : n; };
+const huntName = r => { const n = D.names[r[47]], k = D.kinds[r[48]] || 'hunting land'; return !n || /^Bureau of Land/.test(n) ? k : n; };
+const hunt = r => r[46] == null || r[46] < 0 ? '' : (r[46] <= 100 ? 'Borders ' : miles(r[46]) + ' to ') + huntName(r);
+const HUNT_NOTE = 'Hunting is generally allowed here with a state licence, but seasons, species and closed areas are set by the state and each unit. Check before you go.';
 const pub = r => r[29] < 0 ? '' : (r[29] <= 100 ? 'Borders ' : miles(r[29]) + ' to ') + pubName(r);
 const road = r => r[32] >= 99 ? 'No interstate within 99 mi' : `${r[32]} mi from ${D.names[r[33]] || 'an interstate'}`;
 const hosp = r => r[34] >= 99 ? 'No hospital within 99 mi' : `Hospital ${r[34]} mi`;
@@ -1270,6 +1280,7 @@ function why(r) {
     shelter: [() => 'building on site', () => 'no building detected'],
     laws: [() => 'favourable state law', () => 'restrictive state law or tax'],
     public: [() => (r[29] <= 400 ? 'borders ' : 'near ') + pubName(r), null]};
+  if (r[46] >= 0 && r[46] <= 1609 && good.length < 3) good.push([3.5, 'hunting land ' + (r[46] <= 100 ? 'next door' : miles(r[46]) + ' away')]);
   D.parts.forEach((p, k) => { const f = ps[k] / D.part_max[k], t = say[p]; if (!t) return;
     if (f >= 0.8 && t[0]) good.push([D.part_max[k], t[0]()]); else if (f <= 0.4 && t[1]) weak.push([D.part_max[k], t[1]()]); });
   const top = (a, n) => a.sort((x, y) => y[0] - x[0]).slice(0, n).map(x => x[1]);
@@ -1374,6 +1385,7 @@ function popup(i) {
     <div class="brk">${D.parts.map((p, k) => `<span title="${esc(PART_HELP[p])}">${PART_LABEL[p]}</span><span class="trk"><i style="width:${ps[k] / D.part_max[k] * 100}%;background:var(--p-${p})"></i></span><span class="pt">${ps[k]}/${D.part_max[k]}</span>`).join('')}</div>
     <dl><dt>Water</dt><dd>${esc(water(r)) || 'None mapped within a mile'}</dd>
     <dt>Public land</dt><dd>${esc(pub(r)) || 'None within two miles'}${r[29] >= 0 ? `<br><span class="s">${esc(D.kinds[r[31]] || '')}</span>` : ''}</dd>
+    <dt>Hunting</dt><dd>${hunt(r) ? `${esc(hunt(r))}<br><span class="s" title="${esc(HUNT_NOTE)}">${esc(D.kinds[r[48]] || '')}; check state rules</span>` : 'No hunting land mapped within two miles'}</dd>
     <dt>Hazards</dt><dd>${hazChips(r)}<span class="s" style="display:block;margin-top:2px">Nearest reactor ${r[25] >= 999 ? 'over 999' : r[25]} mi (${esc(D.names[r[26]])})</span></dd>
     ${home ? `<dt>From you</dt><dd>${fromYou(i)}</dd>` : ''}
     <dt>Growing</dt><dd>${esc(clim(r)) || 'No weather station within 60 miles'}${r[38] >= 0 ? `<br><span class="s">from weather stations, nearest ${r[38]} mi away</span>` : ''}</dd>
@@ -1386,6 +1398,7 @@ function popup(i) {
     <div class="chips">${getChips(r)}</div>
     <dl>${r[6] ? `<dt>Owner</dt><dd>${esc(r[6])}</dd>` : ''}
     ${r[12] ? `<dt>Parcel</dt><dd class="id">${esc(r[12])}</dd>` : ''}
+    ${r[49] > 0 ? `<dt>Size</dt><dd>${r[49] >= 10 ? fmt(Math.round(r[49])) : r[49]} acres <span class="s">(per the source record)</span></dd>` : ''}
     ${r[8] ? `<dt>Owed</dt><dd>${money(r[8])}</dd>` : ''}
     ${r[11] ? `<dt>Status</dt><dd>${esc(r[11])}</dd>` : ''}
     <dt>List</dt><dd>${esc(ly.s)}${ly.l && ly.l !== ly.s ? ' / ' + esc(ly.l) : ''}<br><span class="s">${srcLine(r)}</span></dd></dl>
@@ -1665,8 +1678,9 @@ $('pl-copy').addEventListener('click', () => { const text = planSheet();
 
 // ---- public land overlay: fetched live for the area in view (needs signal; standalone page only) ----
 const LANDS = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services';
+const GAME_WHERE = "(Mang_Name='SFW' OR Unit_Nm LIKE '%Wildlife Management%' OR Unit_Nm LIKE '%WMA%' OR Unit_Nm LIKE '%Game Land%' OR Unit_Nm LIKE '%Game Area%' OR Unit_Nm LIKE '%Game Management%' OR Unit_Nm LIKE '%Hunting%' OR Unit_Nm LIKE '%Wildlife Area%') AND Mang_Type IN ('STAT','LOC') AND Pub_Access IN ('OA','RA') AND Category IN ('Fee','Designation')";
 const LAND_COL = {'Forest Service': css('--l-fs'), 'Bureau of Land Management': css('--l-blm'), 'National Park Service': css('--l-nps'),
-  'Fish and Wildlife Service': css('--l-fws'), 'State park or forest': css('--l-state')};
+  'Fish and Wildlife Service': css('--l-fws'), 'State park or forest': css('--l-state'), STAT: css('--l-game'), LOC: css('--l-game')};
 map.createPane('pub'); map.getPane('pub').style.zIndex = 350;
 const pubRenderer = L.canvas({pane: 'pub'});
 let pubOn = false, pubLayer = null, pubSeq = 0, pubTimer = null;
@@ -1676,7 +1690,7 @@ function legend() {
     + (mode === 'heat' && map.getZoom() < 13 ? '<span><i class="sw" style="width:34px;background:linear-gradient(90deg,#3f5a2a,#8fa33a,#f2a33a,#fff0c2)"></i>Glow: more and better sites</span>' : '')
     + (pubOn ? (map.getZoom() < 7 ? '<span>Zoom in to see public land</span>'
       : [['fs', 'National forest'], ['blm', 'BLM'], ['nps', 'National park'], ['fws', 'Refuge'], ['state', 'State park or forest']]
-        .map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '');
+        .concat([['game', 'State game land']]).map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '');
 }
 async function loadPub() {
   const seq = ++pubSeq; legend();
@@ -1686,11 +1700,15 @@ async function loadPub() {
     geometry: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(','), geometryType: 'esriGeometryEnvelope', inSR: 4326, outSR: 4326,
     maxAllowableOffset: tol, geometryPrecision: 5, resultRecordCount: 2000})).then(r => r.json()).then(g => (g.features || []).map(f => (f.properties.k = f.properties[field], f)));
   try {
-    const [fed, st] = await Promise.all([
+    const [fed, st, game] = await Promise.all([
       q('USA_Federal_Lands', "Agency IN ('Forest Service','Bureau of Land Management','National Park Service','Fish and Wildlife Service')", 'Agency'),
-      q('USA_Parks', "FEATTYPE = 'State park or forest'", 'FEATTYPE')]);
+      q('USA_Parks', "FEATTYPE = 'State park or forest'", 'FEATTYPE'),
+      fetch('https://services.arcgis.com/v01gqwM5QqNysAAi/arcgis/rest/services/Manager_Type/FeatureServer/0/query?' + new URLSearchParams({where: GAME_WHERE,
+        outFields: 'Mang_Type', f: 'geojson', geometry: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(','), geometryType: 'esriGeometryEnvelope',
+        inSR: 4326, outSR: 4326, maxAllowableOffset: tol, geometryPrecision: 5, resultRecordCount: 2000}))
+        .then(r => r.json()).then(g => (g.features || []).map(f => (f.properties.k = f.properties.Mang_Type, f))).catch(() => [])]);
     if (seq !== pubSeq) return;              // the map moved again while this was loading
-    const next = L.geoJSON(fed.concat(st), {renderer: pubRenderer, interactive: false,
+    const next = L.geoJSON(fed.concat(st, game), {renderer: pubRenderer, interactive: false,
       style: f => ({color: LAND_COL[f.properties.k] || css('--l-state'), weight: 0.8, fillOpacity: 0.3})});
     if (pubLayer) pubLayer.remove(); pubLayer = next.addTo(map);
   } catch (e) { /* offline or the service is busy: leave whatever is drawn */ }
@@ -1708,9 +1726,10 @@ const NOTOWN = 'No town within 12 miles';
 if (D.public) $('f-q').placeholder = 'Address or parcel ID';   // public copies carry no owner names
 const F = () => ({set: +$('f-set').value, wm: +$('f-water').value, bf: $('f-bldg').value, dist: +$('f-dist').value,
   pub: +$('f-pub').value, haz: +$('f-haz').value, nuke: +$('f-nuke').value, road: +$('f-road').value, hosp: +$('f-hosp').value,
-  grow: +$('f-grow').value, rain: +$('f-rain').value, town: +$('f-town').value, dw: $('f-dw').checked, carry: $('f-carry').checked});
+  grow: +$('f-grow').value, rain: +$('f-rain').value, hunt: +$('f-hunt').value, town: +$('f-town').value, dw: $('f-dw').checked, carry: $('f-carry').checked});
 const baseOk = (r, f) => r[14] <= f.set && !(f.wm > 0 && (r[16] < 0 || r[16] > f.wm)) && r[20] >= f.dist && bldgOk(r, f.bf)
   && !(f.pub > 0 && (r[29] < 0 || r[29] > f.pub)) && hazMax(r) <= f.haz && r[25] >= f.nuke
+  && !(f.hunt > 0 && (r[46] == null || r[46] < 0 || r[46] > f.hunt))
   && r[32] >= f.road && r[34] <= f.hosp && r[36] >= f.grow && r[37] >= f.rain && r[39] <= f.town && !(f.dw && r[42])
   && !(f.carry && !(lawOf(r) && lawOf(r).permitless_carry));
 function fillStates() {                    // state and acquisition tallies follow the survival choices
@@ -1738,7 +1757,7 @@ function fillCities() {
 // Every filter, its "off" value and a short name, so the page can show what is switched on and let it be removed.
 const FILTERS = [['f-reach', '0', 'Reach'], ['f-cross', false, 'Skipping sites behind a major city'], ['f-state', '', 'State'], ['f-city', '', 'Town'],
   ['f-set', '2', 'Setting'], ['f-score', '0', 'Score'], ['f-water', '-1', 'Water'], ['f-grow', '0', 'Season'], ['f-rain', '0', 'Rain'],
-  ['f-pub', '-1', 'Public land'], ['f-bldg', 'any', 'Shelter'], ['f-dist', '0', 'Cities'], ['f-road', '0', 'Interstates'], ['f-haz', '9', 'Hazards'],
+  ['f-pub', '-1', 'Public land'], ['f-hunt', '-1', 'Hunting land'], ['f-bldg', 'any', 'Shelter'], ['f-dist', '0', 'Cities'], ['f-road', '0', 'Interstates'], ['f-haz', '9', 'Hazards'],
   ['f-nuke', '0', 'Reactors'], ['f-dw', false, 'Not downwind'], ['f-town', '999', 'Town'], ['f-hosp', '999', 'Hospital'],
   ['f-carry', false, 'Permitless-carry states'], ['f-estate', false, 'Estate or heirs on title'], ['f-stack', false, 'Estate and tax distress'],
   ['f-gov', false, 'Government-published lists only'], ['f-age', '99', 'List age'], ['f-q', '', 'Search']];
@@ -1848,9 +1867,9 @@ function table() {
   $('rows').innerHTML = inView.slice(page * PAGE, page * PAGE + PAGE).map(i => { const r = R[i], t = tier(r[2]);
     return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" title="${TIER_HELP[t[0]]}" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
       ${TILES ? `<td class="pic">${photo(r, 96, 64, 15)}</td>` : ''}
-      <td class="site"><div class="t1">${esc(title(r))}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${pid(r) && r[5] ? `<div class="s id">${esc(pid(r))}</div>` : ''}${whyHtml(r)}
+      <td class="site"><div class="t1">${esc(title(r))}${r[49] > 0 ? ` <span class="s">&middot; ${r[49] >= 10 ? fmt(Math.round(r[49])) : r[49]} ac</span>` : ''}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${pid(r) && r[5] ? `<div class="s id">${esc(pid(r))}</div>` : ''}${whyHtml(r)}
         <div class="planbtns"><button data-details="${i}">Details</button><span>Add to plan:</span>${TIERS.map((t, k) => `<button data-tier="${k}" data-i="${i}">${t.name}</button>`).join('')}</div></td>
-      <td class="more">${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
+      <td class="more">${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${hunt(r) && hunt(r) !== pub(r) ? `<div class="s">Hunting: ${esc(hunt(r))}</div>` : ''}${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
       <td class="more">${hazChips(r)}</td><td class="more">${bldg(r)}<div class="s" style="margin-top:3px">${esc(town(r))}</div><div class="s">${esc(hosp(r))}</div></td>
       <td class="more">${esc(far(r))}<div class="s">${esc(road(r))}</div>${dens(r) ? `<div class="s">${esc(dens(r))}</div>` : ''}${home ? `<div style="margin-top:3px">${fromYou(i)}</div>` : ''}</td>
       <td class="get more"><div class="chips">${getChips(r)}</div>${r[6] ? `<div class="s" style="margin-top:4px">${esc(r[6])}</div>` : ''}${r[8] ? `<div class="s">${money(r[8])} owed</div>` : ''}<div class="s" style="margin-top:3px">${srcLine(r)}</div></td>
@@ -1867,7 +1886,7 @@ $('l-sort').addEventListener('change', listings);
 function setMode(m) { mode = m; $('m-heat').setAttribute('aria-pressed', m === 'heat'); $('m-pts').setAttribute('aria-pressed', m === 'points'); syncLayers(); }
 $('m-heat').addEventListener('click', () => setMode('heat')); $('m-pts').addEventListener('click', () => setMode('points'));
 const unpick = () => document.querySelectorAll('.picks button').forEach(b => b.setAttribute('aria-pressed', 'false'));
-['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke', 'f-road', 'f-hosp', 'f-grow', 'f-rain', 'f-town', 'f-dw', 'f-carry'].forEach(id => $(id).addEventListener('change', fillStates));
+['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke', 'f-road', 'f-hosp', 'f-grow', 'f-rain', 'f-town', 'f-dw', 'f-carry', 'f-hunt'].forEach(id => $(id).addEventListener('change', fillStates));
 $('f-state').addEventListener('change', () => { $('f-city').value = ''; fillCities(); });
 document.querySelectorAll('aside input:not(#sp-q):not([type=number]), aside select').forEach(el =>
   el.addEventListener(el.type === 'search' ? 'input' : 'change', () => { unpick(); apply(true); }));
@@ -1878,7 +1897,7 @@ function clear() {
   $('f-set').value = '0'; $('f-water').value = '-1'; $('f-bldg').value = 'any'; $('f-dist').value = '0';
   $('f-pub').value = '-1'; $('f-haz').value = '9'; $('f-nuke').value = '0';
   $('f-road').value = '0'; $('f-hosp').value = '999'; $('f-grow').value = '0'; $('f-rain').value = '0';
-  $('f-town').value = '999'; $('f-dw').checked = $('f-carry').checked = false; unpick();
+  $('f-town').value = '999'; $('f-hunt').value = '-1'; $('f-dw').checked = $('f-carry').checked = false; unpick();
 }
 $('reset').addEventListener('click', () => { clear(); $('f-reach').value = '0'; $('f-cross').checked = false; $('f-state').value = ''; fillStates(); apply(false); map.setView([39.5, -98.5], 4); });
 const PICKS = {                            // one-tap briefs; the state and town choice is kept
@@ -1886,6 +1905,7 @@ const PICKS = {                            // one-tap briefs; the state and town
   ready: () => { $('f-bldg').value = 'house'; $('f-water').value = '805'; },
   raw: () => { $('f-bldg').value = 'none'; $('f-water').value = '805'; $('f-dist').value = '25'; },
   pub: () => { $('f-pub').value = '400'; },
+  hunt: () => { $('f-hunt').value = '1609'; $('f-water').value = '1609'; },
   safe: () => { $('f-haz').value = '1'; $('f-nuke').value = '50'; },
   grow: () => { $('f-grow').value = '150'; $('f-rain').value = '25'; $('f-water').value = '1609'; },
   family: () => { $('f-hosp').value = '30'; $('f-bldg').value = 'house'; $('f-road').value = '5'; $('f-town').value = '10'; },
@@ -1897,12 +1917,12 @@ document.querySelectorAll('.picks button').forEach(b => b.addEventListener('clic
   fillStates(); apply(false); }));
 function csvText(limit) {
   const rows = [['bug_out_score', ...D.parts.map(p => 'pts_' + p), 'setting', 'address', 'nearest_town', 'county', 'state', 'water_name', 'water_meters',
-    'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'public_land', 'public_land_meters', 'miles_to_interstate', 'interstate', 'miles_to_hospital', 'hospital', 'growing_season_days', 'rainfall_inches', 'miles_to_town', 'town', 'town_population', 'downwind_of', 'state_law', 'hazards', 'miles_to_nuclear_plant', 'miles_from_start', 'line_crosses_city', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
+    'miles_to_city_50k', 'city_50k', 'county_people_per_sqmi', 'acres', 'public_land', 'public_land_meters', 'hunting_land', 'hunting_land_meters', 'miles_to_interstate', 'interstate', 'miles_to_hospital', 'hospital', 'growing_season_days', 'rainfall_inches', 'miles_to_town', 'town', 'town_population', 'downwind_of', 'state_law', 'hazards', 'miles_to_nuclear_plant', 'miles_from_start', 'line_crosses_city', 'building_footprint_sqft_estimate', 'how_to_get_it', 'owner', 'parcel', 'owed', 'status',
     'lat', 'lon', 'directions', 'list', 'list_updated', 'publisher_type', 'source']];
   const take = inView.slice(0, limit);
   for (const i of take) { const r = R[i], ly = D.layers[r[9]];
     rows.push([r[2], ...parts(r), SETTING[r[14]], r[5], D.cities[r[15]], CO[r[7]] || '', ABBR[r[7].slice(0, 2)] || '', D.waters[r[17]], r[16] < 0 ? '' : r[16],
-      r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[29] < 0 ? '' : pubName(r), r[29] < 0 ? '' : r[29], r[32], D.names[r[33]], r[34], D.names[r[35]], r[36] < 0 ? '' : r[36], r[37] < 0 ? '' : r[37], r[39], D.names[r[40]], r[41], (r[42] & 1 ? 'reactor ' : '') + (r[42] & 2 ? D.names[r[43]] : ''), lawText(r),
+      r[20], D.bigs[r[21]], r[22] < 0 ? '' : r[22], r[49] > 0 ? r[49] : '', r[29] < 0 ? '' : pubName(r), r[29] < 0 ? '' : r[29], r[46] >= 0 ? huntName(r) : '', r[46] >= 0 ? r[46] : '', r[32], D.names[r[33]], r[34], D.names[r[35]], r[36] < 0 ? '' : r[36], r[37] < 0 ? '' : r[37], r[39], D.names[r[40]], r[41], (r[42] & 1 ? 'reactor ' : '') + (r[42] & 2 ? D.names[r[43]] : ''), lawText(r),
       D.hazards.filter((h, k) => +r[24][k]).map((h, k2) => h).join('; '), r[25], home ? Math.round(dist[i]) : '', home && cross[i] >= 0 ? D.metros[cross[i]][0] : '', r[18] < 0 ? '' : r[18], CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.id).join(' ') + ((r[4] & 1) ? ' estate' : ''),
       r[6], r[12], r[8] || '', r[11], r[0], r[1], gdir(r), ly.s, ly.d, SRC[r[45]], ly.u]); }
   return [rows.map(r => r.map(v => /[",\n]/.test(v) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(',')).join('\n'), take.length];
@@ -1911,7 +1931,7 @@ function kmlText(limit) {                  // opens in Google Earth, Organic Map
   const take = inView.slice(0, limit);
   const pm = take.map(i => { const r = R[i];
     return `<Placemark><name>${esc(r[2] + ' · ' + title(r))}</name><description>${esc(['Bug-out score ' + r[2] + ' (' + tier(r[2])[0] + ')', place(r),
-      water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), clim(r), far(r), road(r), town(r), hosp(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
+      water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), hunt(r) && 'Hunting: ' + hunt(r), clim(r), far(r), road(r), town(r), hosp(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
       CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.label).join('; '), r[6] && 'Owner: ' + r[6], r[12] && 'Parcel: ' + r[12],
       r[8] ? 'Owed: ' + money(r[8]) : ''].filter(Boolean).join('\n'))}</description><Point><coordinates>${r[1]},${r[0]},0</coordinates></Point></Placemark>`; }).join('\n');
   return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>BuggedOut sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
@@ -1956,7 +1976,7 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
   document.addEventListener('click', e => { if (box.open && !box.contains(e.target)) box.open = false; });
   navigator.serviceWorker.getRegistration().then(r => { if (r && r.active) saved(); });
   btn.addEventListener('click', async () => {
-    btn.disabled = true; btn.textContent = 'Saving, about 55 MB…';
+    btn.disabled = true; btn.textContent = 'Saving, about 67 MB…';
     try { await navigator.serviceWorker.register('sw.js'); await navigator.serviceWorker.ready;
       if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
       saved(); }
