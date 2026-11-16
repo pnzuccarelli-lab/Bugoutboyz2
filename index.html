@@ -257,6 +257,9 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   .brand { flex: 1; min-width: 0; gap: 8px; } .brand svg { width: 26px; height: 26px; }
   h1 { font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #how-open, .offbox > summary { padding: 7px 10px; font-size: 13px; white-space: nowrap; }
+  #how-open { font-size: 0; } #how-open::after { content: "Help"; font-size: 13px; }
+  .guide li.done, .guide li:not(.done) ~ li:not(.done) { display: none; }
+  .guide ol { list-style: none; padding-left: 0; } .guide { align-items: center; } #guide-x { padding: 4px 9px; font-size: 12px; min-height: 30px; }
   #f-toggle { display: none !important; }
   .shell { flex-direction: column; overflow: hidden; padding-bottom: var(--tabs-h); }
   main { overflow: hidden; gap: 8px; padding: 8px max(10px, env(safe-area-inset-right, 0px)) 8px max(10px, env(safe-area-inset-left, 0px)); }
@@ -316,6 +319,7 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   #map-msg { top: auto; bottom: 46px; }
   .mapbar { position: absolute; top: 10px; left: 56px; right: 10px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 }
+@media (min-width: 861px) and (max-height: 900px) { .picks { flex: none; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; } .picks button { flex: none; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 /* required styles */
 
@@ -1023,7 +1027,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <p>BuggedOut USA ranks land across the US as places to get away to and live off-grid. Every site comes from a public county record, such as a tax sale, an estate, a land bank or a government surplus list, so each one has a path to buying it.</p>
     <h3>Using it</h3>
     <ol><li><b>Set your starting point</b> (search your town, pick on the map, or use your location) and your vehicle's range. Sites then show how far they are and what lies between.</li>
-      <li><b>Choose what matters.</b> Tap a preset, or open the filter groups on the left. The chips above the map show every filter that is switched on; tap one to remove it.</li>
+      <li><b>Choose what matters.</b> Tap a preset, or open the filters (on a phone, the Filters tab). The chips above the map show every filter that is switched on; tap one to remove it.</li>
       <li><b>Open a site</b> on the map or in the list to see why it scored as it did, then add it to your plan as a Fallback, Primary or Long-range destination.</li>
       <li><b>Take it with you.</b> On the public site, save the page for offline use and save the maps for your route.</li></ol>
     <h3>The score</h3>
@@ -1050,7 +1054,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <h3>How accurate is it</h3>
     <div id="audit" class="stack"></div>
     <h3>Limits you should know</h3>
-    <p class="note" style="font-size:13px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score, because no national data exists for it here: parcel size, soil quality, legal road access, site-level flood zones, zoning. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Planning a trip.</b> Open a site and add it to your plan as Fallback, Primary or Long-range. With a starting point set, the Trip plan panel works out road miles (the straight line plus a quarter), how many tanks it takes, a stopover on national forest or BLM land for each leg, the nearest small town off the interstate, and which cities and interstates the direct line crosses. It is a planning aid, not turn-by-turn routing: it does not know bridges, passes or closures, so drive the route once.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
+    <p class="note" style="font-size:13px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score: parcel size, zoning and legal access. The distance to a public road is shown and can be filtered, but only county records show whether there is a legal right of way. Flood zone, slope and soil are checked at the site's map point, not across the whole parcel. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Planning a trip.</b> Open a site and add it to your plan as Fallback, Primary or Long-range. With a starting point set, the Trip plan panel works out road miles (the straight line plus a quarter), how many tanks it takes, a stopover on national forest or BLM land for each leg, the nearest small town off the interstate, and which cities and interstates the direct line crosses. It is a planning aid, not turn-by-turn routing: it does not know bridges, passes or closures, so drive the route once.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
   </div>
 </dialog>
 <div class="shell">
@@ -1208,7 +1212,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </div>
     <div class="active" id="active" aria-label="Filters switched on"></div>
     <div class="mapwrap">
-      <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading the site list. The first visit downloads about 55 MB…</p></div>
+      <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading the site list…</p></div>
       <div class="mapbar" id="mapbar">
       <button id="b-layers" aria-expanded="false" aria-controls="base">Layers</button>
       <div class="base" role="group" aria-label="Map layers" id="base">
@@ -1460,6 +1464,7 @@ const cluster = L.markerClusterGroup({chunkedLoading: true, maxClusterRadius: 46
   spiderfyOnMaxZoom: false, showCoverageOnHover: false,
   iconCreateFunction: c => { const n = c.getChildCount(), s = n < 100 ? 30 : n < 1000 ? 38 : 46;
     return L.divIcon({html: n < 1000 ? n : (n / 1000).toFixed(n < 10000 ? 1 : 0) + 'k', className: 'cl', iconSize: [s, s]}); }});
+{ const rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { if (this._map) rd.call(this); }; }   // a queued redraw can land after the layer is taken off the map
 const heat = L.heatLayer([], {radius: 15, blur: 17, maxZoom: 9, minOpacity: 0.3,
   gradient: {0.2: '#3f5a2a', 0.45: '#8fa33a', 0.65: '#f2a33a', 0.85: '#e8603a', 1: '#fff0c2'}});
 const TCOL = {prime: css('--t-prime'), strong: css('--t-strong'), viable: css('--t-viable'), low: css('--t-low')};
@@ -1469,7 +1474,7 @@ function marker(i) {
     const r = R[i];
     markers[i] = L.circleMarker([r[0], r[1]], {radius: 4 + r[2] / 22, color: '#0b0d08', weight: 1, fillColor: TCOL[tier(r[2])[1]], fillOpacity: 0.95});
     markers[i].on('click', e => { L.DomEvent.stopPropagation(e); if (PH.matches) { siteSheet(i); return; }
-      L.popup({maxWidth: 320, maxHeight: Math.max(220, map.getSize().y - 70)}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); });
+      L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], maxHeight: Math.max(220, map.getSize().y - 100)}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); });
   }
   return markers[i];
 }
@@ -1490,7 +1495,7 @@ function openSite(i, zoom) {                // show a site's details wherever th
   const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 16));
   document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'});
   setTimeout(() => { syncLayers();
-    L.popup({maxWidth: 320, maxHeight: Math.max(220, map.getSize().y - 70), offset: [0, -4]}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); }, 450);
+    L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], maxHeight: Math.max(220, map.getSize().y - 100), offset: [0, -4]}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); }, 450);
 }
 function popup(i) {
   const r = R[i], ly = D.layers[r[9]], pl = place(r), st = ST[r[7].slice(0, 2)] || '', ps = parts(r), t = tier(r[2]);
@@ -1587,7 +1592,8 @@ $('sp-q').addEventListener('input', () => {       // "boise, id" should find "Bo
     || (nameQ.length >= 2 ? '<li style="cursor:default;color:var(--muted)">No town by that name. Try a nearby one, or use Pick on map.</li>' : '');
   ul.hidden = !ul.innerHTML;
 });
-const pickTown = li => { if (!li.dataset.j) return; const t = D.towns[+li.dataset.j]; $('sp-list').hidden = true; $('sp-q').value = ''; setHome(t[2], t[3], t[0] + ', ' + t[1]); };
+const pickTown = li => { if (!li.dataset.j) return; const t = D.towns[+li.dataset.j]; $('sp-list').hidden = true; $('sp-q').value = ''; setHome(t[2], t[3], t[0] + ', ' + t[1]);
+  if (PH.matches) { go('map'); toast(`Starting from ${t[0]}, ${t[1]}. Sites now show how far they are.`); } };
 $('sp-list').addEventListener('click', e => { const li = e.target.closest('li'); if (li) pickTown(li); });
 $('sp-list').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('li')) pickTown(e.target); });
 $('sp-pick').addEventListener('click', () => { picking = !picking; $('map').classList.toggle('picking', picking);
@@ -1965,9 +1971,17 @@ function guide() {                         // the three-step strip: tick off wha
   const g = $('guide'); let hidden = false; try { hidden = localStorage.getItem('bo-guide') === '0'; } catch (e) {}
   g.hidden = hidden; if (hidden) return;
   const done = [!!home, FILTERS.some(f => f[0] !== 'f-set' && isOn(f)), typeof plan !== 'undefined' && plan.some(Boolean)];
+  if (done.every(Boolean)) { try { localStorage.setItem('bo-guide', '0'); } catch (e) {} g.hidden = true; return; }
   g.querySelectorAll('li').forEach(li => li.classList.toggle('done', done[+li.dataset.step]));
 }
-let visible = [], inView = [], page = 0, mode = 'heat', clusterDirty = true;
+let visible = [], inView = [], page = 0, mode = 'heat', clusterDirty = true, stateReady = false;
+function saveState() {                     // remembered in this browser only
+  if (!stateReady) return;
+  try { const f = {}; FILTERS.forEach(([id]) => { const el = $(id); f[id] = el.type === 'checkbox' ? el.checked : el.value; });
+    const pk = document.querySelector('.picks [aria-pressed="true"]'), c = map.getCenter();
+    localStorage.setItem('bo-state', JSON.stringify({v: 1, f, sig: [...document.querySelectorAll('#sigs input')].filter(x => x.checked).map(x => +x.dataset.k),
+      pick: pk ? pk.dataset.pick : '', sort: $('l-sort').value, mode, at: [+c.lat.toFixed(4), +c.lng.toFixed(4), map.getZoom()]})); } catch (e) {}
+}
 function collect() {                       // indices of every site that passes the filters as they are set right now
   let mask = 0; document.querySelectorAll('#sigs input').forEach(c => { if (c.checked) mask |= 1 << +c.dataset.k; });
   const f = F(), est = $('f-estate').checked, stack = $('f-stack').checked, min = +$('f-score').value, st = $('f-state').value,
@@ -2040,7 +2054,7 @@ function apply(fit) {
     : '<b>Showing sites with a ' + (f.bf === 'house' ? 'house-sized building' : 'building') + ' detected nearby.</b> This is an estimate, not a record of a dwelling: the building may be a barn, shop or ruin, or may belong to a neighbouring lot. Sizes are roof footprints, not living area. Check the photo and the county record.';
   const pts = visible.map(i => [R[i][0], R[i][1], 0.15 + (R[i][2] / 100) ** 2]);
   if (map.hasLayer(heat)) heat.setLatLngs(pts); else heat._latlngs = pts;   // off the map (zoomed in): just hold the points
-  clusterDirty = true; syncLayers(); renderChips();
+  clusterDirty = true; syncLayers(); renderChips(); saveState();
   if (fit && visible.length && (st || q)) map.fitBounds(L.latLngBounds(visible.slice(0, 8000).map(i => [R[i][0], R[i][1]])).pad(0.1), {maxZoom: 14});
   else listings();
 }
@@ -2080,12 +2094,12 @@ function table() {
       ? 'No sites in this part of the map. Zoom out or move the map: ' + fmt(visible.length) + ' sites match elsewhere.'
       : 'No sites match these filters. The line above the map shows which filter to remove.'}</td></tr>`;
 }
-map.on('moveend', listings); map.on('zoomend', syncLayers);
+map.on('moveend', listings); map.on('zoomend', syncLayers); map.on('moveend', () => { clearTimeout(saveState.t); saveState.t = setTimeout(saveState, 800); });
 $('rows').addEventListener('click', e => { const tr = e.target.closest('tr[data-i]'); if (!tr || e.target.closest('a, button')) return; openSite(+tr.dataset.i); });
 $('l-prev').addEventListener('click', () => { page--; table(); });
 $('l-next').addEventListener('click', () => { page++; table(); });
-$('l-sort').addEventListener('change', listings);
-function setMode(m) { mode = m; $('m-heat').setAttribute('aria-pressed', m === 'heat'); $('m-pts').setAttribute('aria-pressed', m === 'points'); syncLayers(); }
+$('l-sort').addEventListener('change', listings); $('l-sort').addEventListener('change', () => saveState());
+function setMode(m) { mode = m; saveState(); $('m-heat').setAttribute('aria-pressed', m === 'heat'); $('m-pts').setAttribute('aria-pressed', m === 'points'); syncLayers(); }
 $('m-heat').addEventListener('click', () => setMode('heat')); $('m-pts').addEventListener('click', () => setMode('points'));
 const unpick = () => document.querySelectorAll('.picks button').forEach(b => b.setAttribute('aria-pressed', 'false'));
 ['f-set', 'f-water', 'f-bldg', 'f-dist', 'f-pub', 'f-haz', 'f-nuke', 'f-road', 'f-hosp', 'f-grow', 'f-rain', 'f-town', 'f-dw', 'f-carry', 'f-hunt', 'f-flood', 'f-slope', 'f-roadin', 'f-soil'].forEach(id => $(id).addEventListener('change', fillStates));
@@ -2309,6 +2323,29 @@ if (!PHONE) setTimeout(() => ensureMore(moreLeft(), true), 1500);
 window.BO = {R, collect, setHome};          // for automated checks   // desktops get every site without waiting
 try { const g = JSON.parse(localStorage.getItem('bo-grid') || 'null'); if (g) { if (g[0]) setGrid(true); if (g[1]) setLines(true); } } catch (e) {}   // the grid switches as last left
 try { const h = JSON.parse(localStorage.getItem('bob-home') || 'null'); if (h && isFinite(h.lat) && isFinite(h.lon)) setHome(h.lat, h.lon, h.label || 'your saved point'); } catch (e) {}
+
+// ---- returning visitors: filters, preset, sort, map style and map position come back as they were left ----
+(() => {
+  let st = null; try { st = JSON.parse(localStorage.getItem('bo-state') || 'null'); } catch (e) {}
+  const shared = /site=/.test(location.hash);
+  if (st && st.v === 1) { try {
+    const put = (id, v) => { const el = $(id); if (!el || v == null) return; if (el.type === 'checkbox') el.checked = !!v; else el.value = v; };
+    FILTERS.forEach(([id]) => { if (id !== 'f-state' && id !== 'f-city') put(id, st.f[id]); });
+    if (Array.isArray(st.sig)) document.querySelectorAll('#sigs input').forEach(c => { c.checked = st.sig.includes(+c.dataset.k); });
+    fillStates(); put('f-state', st.f['f-state']); if ($('f-state').value !== (st.f['f-state'] || '')) $('f-state').value = '';
+    fillCities(); put('f-city', st.f['f-city']); if ($('f-city').selectedIndex < 0) $('f-city').value = '';
+    FILTERS.forEach(([id, off]) => { const el = $(id); if (el.type !== 'checkbox' && el.tagName === 'SELECT' && el.selectedIndex < 0) el.value = off; });
+    if (st.pick) { const b = document.querySelector(`.picks [data-pick="${st.pick}"]`); if (b) b.setAttribute('aria-pressed', 'true'); }
+    if (st.sort && (st.sort !== 'near' || home)) $('l-sort').value = st.sort;
+    if (st.mode === 'points') setMode('points');
+    if (!shared && st.at && isFinite(st.at[0])) map.setView([st.at[0], st.at[1]], st.at[2], {animate: false});
+    apply(false);
+    const on = FILTERS.filter(f => f[0] !== 'f-set' && isOn(f)).length, np = plan.filter(Boolean).length;
+    const kept = [home && 'starting point', on && 'filters', np && 'trip plan'].filter(Boolean), many = kept.length > 1 || on;
+    if (!shared && kept.length) toast(`Welcome back. Your ${kept.join(', ').replace(/, ([^,]*)$/, ' and $1')} ${many ? 'are' : 'is'} as you left ${many ? 'them' : 'it'}.`, 6000);
+  } catch (e) {} }
+  stateReady = true;
+})();
 }
 function expandRows(d, rows) {             // county-wide values are stored once per county; copy them onto each row
   for (const r of rows) { const c = d.county[r[7]] || ['000000', -1]; r[24] = c[0] || '000000'; r[22] = c[1]; }
