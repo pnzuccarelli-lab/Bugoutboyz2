@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>body{margin:0}[hidden]{display:none!important}</style>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5EEGP870K0"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-5EEGP870K0');</script>
 </head>
 <body>
 <title>BuggedOut USA</title>
@@ -1054,7 +1056,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <h3>How accurate is it</h3>
     <div id="audit" class="stack"></div>
     <h3>Limits you should know</h3>
-    <p class="note" style="font-size:13px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score: parcel size, zoning and legal access. The distance to a public road is shown and can be filtered, but only county records show whether there is a legal right of way. Flood zone, slope and soil are checked at the site's map point, not across the whole parcel. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Planning a trip.</b> Open a site and add it to your plan as Fallback, Primary or Long-range. With a starting point set, the Trip plan panel works out road miles (the straight line plus a quarter), how many tanks it takes, a stopover on national forest or BLM land for each leg, the nearest small town off the interstate, and which cities and interstates the direct line crosses. It is a planning aid, not turn-by-turn routing: it does not know bridges, passes or closures, so drive the route once.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.</p>
+    <p class="note" style="font-size:13px"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire through a tax sale, an estate, a land bank or a government surplus sale. It is not permission to enter or occupy anything.<br><br>Hazards are by county, from how often each one happens there in FEMA's National Risk Index: high means the top 10% of US counties, elevated the top 30%. A wet valley and a dry ridge in the same county get the same rating, so check the ground itself. Public land is national forest, BLM, national park, wildlife refuge or state forest within two miles; forest and BLM land score highest because most of it allows dispersed camping, but rules vary by unit. Growing season and rainfall come from NOAA's 1991 to 2020 normals at the nearest weather stations, which sit mostly in valleys and towns; land well above its neighbours has a shorter season and more precipitation than shown. Interstates count against a site because that is where people leaving cities will travel. Community counts for a site: writers who lived through real collapses warn that a lone homestead is hard for one family to hold, so the score rewards a small town a few miles away and a hospital within reach, while still rewarding distance from cities. Downwind assumes the usual west-to-east winds of the continental US and flags sites east of a reactor (within 50 miles) or of a big city or major base (within 100); real wind varies, so treat it as a rule of thumb. State law and tax notes are a snapshot and not legal advice. Distances from your starting point are straight lines; roads run about a quarter longer.<br><br>Not in the score: parcel size, zoning and legal access. The distance to a public road is shown and can be filtered, but only county records show whether there is a legal right of way. Flood zone, slope and soil are checked at the site's map point, not across the whole parcel. Water is the nearest perennial stream, river, lake or reservoir in USGS hydrography, straight-line; springs, wells and small creeks are missing, and reaching it may cross private land. Distance from a city is measured to the edge of the nearest city of 50,000+ people. Each row is a lead from a public list and may be out of date.<br><br><b style="color:var(--ink)">Planning a trip.</b> Open a site and add it to your plan as Fallback, Primary or Long-range. With a starting point set, the Trip plan panel works out road miles (the straight line plus a quarter), how many tanks it takes, a stopover on national forest or BLM land for each leg, the nearest small town off the interstate, and which cities and interstates the direct line crosses. It is a planning aid, not turn-by-turn routing: it does not know bridges, passes or closures, so drive the route once.<br><br><b style="color:var(--ink)">Taking it with you.</b> On the public site, tap Save for offline use, then add the page to your phone's home screen. Your starting point, the whole site list, filters and scores then work with no signal, and Use my location works from GPS alone. Topo maps work offline for any area you saved with Save this map area. Street maps, new photos and outbound links still need signal.<br><br><b style="color:var(--ink)">Visit counting.</b> This site uses Google Analytics to count visits and see which features get used. Your starting point, filters and trip plan stay in your browser and are not sent.</p>
   </div>
 </dialog>
 <div class="shell">
@@ -1473,7 +1475,7 @@ function marker(i) {
   if (!markers[i]) {
     const r = R[i];
     markers[i] = L.circleMarker([r[0], r[1]], {radius: 4 + r[2] / 22, color: '#0b0d08', weight: 1, fillColor: TCOL[tier(r[2])[1]], fillOpacity: 0.95});
-    markers[i].on('click', e => { L.DomEvent.stopPropagation(e); if (PH.matches) { siteSheet(i); return; }
+    markers[i].on('click', e => { L.DomEvent.stopPropagation(e); track('site_open', {score: r[2], state: r[7].slice(0, 2)}); if (PH.matches) { siteSheet(i); return; }
       L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], maxHeight: Math.max(220, map.getSize().y - 100)}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); });
   }
   return markers[i];
@@ -1489,7 +1491,9 @@ const TIER_HELP = {PRIME: 'Prime: 80 or more out of 100', STRONG: 'Strong: 65 to
 const getChips = r => CATS.filter((c, k) => r[3] & (1 << k)).map(c => `<span class="chip" title="${esc(GLOSS[c.id] || '')}" style="background:var(--c-${c.id})">${esc(c.label)}</span>`).join('')
   + ((r[4] & 1) && !(r[3] & estateBit) ? '<span class="chip o">Estate / heirs on title</span>' : '')
   + ((r[4] & 2) ? '<span class="chip o">Attorney or administrator on record</span>' : '');
-function openSite(i, zoom) {                // show a site's details wherever the map layers are at
+const track = (name, params) => { try { if (window.gtag) gtag('event', name, params || {}); } catch (e) {} };   // only when the public site has analytics switched on; never sends a location
+function openSite(i, zoom) {
+  track('site_open', {score: R[i][2], state: R[i][7].slice(0, 2)});                // show a site's details wherever the map layers are at
   go('map');
   if (PH.matches) { const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 15), {animate: false}); siteSheet(i); return; }
   const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 16));
@@ -1788,7 +1792,7 @@ function planSheet() {
 const savePlan = () => { try { localStorage.setItem('bo-plan', JSON.stringify(plan)); } catch (e) {} guide(); };
 document.addEventListener('click', e => {
   const add = e.target.closest('[data-tier]'), show = e.target.closest('[data-show]'), drop = e.target.closest('[data-drop]'), go = e.target.closest('[data-go]');
-  if (add) { act = +add.dataset.tier; plan[act] = snap(+add.dataset.i); savePlan(); renderPlan(); map.closePopup();
+  if (add) { track('plan_add', {tier: TIERS[+add.dataset.tier].name}); act = +add.dataset.tier; plan[act] = snap(+add.dataset.i); savePlan(); renderPlan(); map.closePopup();
     if (PH.matches) toast(`Added to your plan as ${TIERS[act].name}. Open Plan to see the trip.`); else $('plan').scrollIntoView({block: 'nearest'}); }
   else if (show) { act = +show.dataset.show; renderPlan(); const p = plan[act];
     go('map');
@@ -2130,7 +2134,7 @@ const PICKS = {                            // one-tap briefs; the state and town
 };
 document.querySelectorAll('.picks button').forEach(b => b.addEventListener('click', () => {
   const on = b.getAttribute('aria-pressed') === 'true'; clear();
-  if (!on) { PICKS[b.dataset.pick](); b.setAttribute('aria-pressed', 'true'); }
+  if (!on) { PICKS[b.dataset.pick](); b.setAttribute('aria-pressed', 'true'); track('preset', {preset: b.dataset.pick}); }
   fillStates(); apply(false); }));
 function csvText(limit) {
   const rows = [['bug_out_score', ...D.parts.map(p => 'pts_' + p), 'setting', 'address', 'nearest_town', 'county', 'state', 'water_name', 'water_meters',
@@ -2286,6 +2290,7 @@ layoutVars(); setTimeout(relayout, 0);
 // Share a site: a link that opens this page on that site.
 document.addEventListener('click', e => { const a = e.target.closest('[data-share]'); if (!a) return; e.preventDefault();
   const r = R[+a.dataset.share], url = location.href.split('#')[0] + `#site=${r[0].toFixed(5)},${r[1].toFixed(5)},${r[7].slice(0, 2)}`;
+  track('share');
   if (navigator.share) navigator.share({title: title(r), text: 'A site on BuggedOut USA', url}).catch(() => {});
   else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast('Link copied.'), () => prompt('Copy this link', url));
   else prompt('Copy this link', url); });
