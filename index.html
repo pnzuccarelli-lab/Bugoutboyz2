@@ -11,7 +11,7 @@
 <style>body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
-<title>BuggedOut</title>
+<title>BuggedOut USA</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Stencil+One&display=swap">
 <style>
@@ -942,7 +942,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <header>
   <div class="brand">
     <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="12" fill="none" stroke="#f2a33a" stroke-width="2"/><circle cx="17" cy="17" r="3" fill="#f2a33a"/><path d="M17 1v9M17 24v9M1 17h9M24 17h9" stroke="#f2a33a" stroke-width="2" fill="none"/></svg>
-    <h1>BuggedOut</h1>
+    <h1>BuggedOut USA</h1>
   </div>
   <p class="tag">Survival site location engine for when SHTF.</p>
   <p><span id="total"></span> sites scored &middot; <span id="nsrc"></span> public county lists &middot; data refreshed <span id="built"></span>, updated weekly<span id="capnote"></span></p>
@@ -968,8 +968,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </header>
 <dialog id="how">
   <div class="how">
-    <div class="lhead"><h2>How BuggedOut works</h2><button id="how-x">Close</button></div>
-    <p>BuggedOut ranks land across the US as places to get away to and live off-grid. Every site comes from a public county record, such as a tax sale, an estate, a land bank or a government surplus list, so each one has a path to buying it.</p>
+    <div class="lhead"><h2>How BuggedOut USA works</h2><button id="how-x">Close</button></div>
+    <p>BuggedOut USA ranks land across the US as places to get away to and live off-grid. Every site comes from a public county record, such as a tax sale, an estate, a land bank or a government surplus list, so each one has a path to buying it.</p>
     <h3>Using it</h3>
     <ol><li><b>Set your starting point</b> (search your town, pick on the map, or use your location) and your vehicle's range. Sites then show how far they are and what lies between.</li>
       <li><b>Choose what matters.</b> Tap a preset, or open the filter groups on the left. The chips above the map show every filter that is switched on; tap one to remove it.</li>
@@ -2069,7 +2069,7 @@ function kmlText(limit) {                  // opens in Google Earth, Organic Map
       water(r) && 'Water: ' + water(r), pub(r) && 'Public land: ' + pub(r), hunt(r) && 'Hunting: ' + hunt(r), ground(r) && 'Ground: ' + ground(r), floodText(r) && 'Flood: ' + floodText(r), roadText(r) && 'Road: ' + roadText(r), soilText(r) && 'Soil: ' + soilText(r), clim(r), far(r), road(r), town(r), hosp(r), r[18] > 0 && 'Building detected nearby (unverified): ~' + r[18] + ' sq ft footprint',
       CATS.filter((c, k) => r[3] & (1 << k)).map(c => c.label).join('; '), r[6] && 'Owner: ' + r[6], r[12] && 'Parcel: ' + r[12],
       r[8] ? 'Owed: ' + money(r[8]) : ''].filter(Boolean).join('\n'))}</description><Point><coordinates>${r[1]},${r[0]},0</coordinates></Point></Placemark>`; }).join('\n');
-  return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>BuggedOut sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
+  return [`<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>BuggedOut USA sites ${D.generated}</name>\n${pm}\n</Document></kml>`, take.length];
 }
 const done = t => { $('msg').textContent = t; setTimeout(() => $('msg').textContent = '', 4000); };
 $('copy').addEventListener('click', () => {
