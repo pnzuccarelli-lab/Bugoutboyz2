@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#11140e">
@@ -135,6 +135,16 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 .seg button + button, .base button + button { border-left: 0; }
 .base button[style*="margin-left"] { border-left: 1px solid var(--line); }
 .mapbar { display: contents; }
+#tabs, .ffoot, #b-layers { display: none; }
+#site-sheet { position: fixed; z-index: 1350; left: 0; right: 0; bottom: var(--tabs-h); max-height: 52%; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--panel); border-top: 2px solid var(--accent); border-radius: 10px 10px 0 0; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.55);
+  padding: 12px max(14px, env(safe-area-inset-right, 0px)) 16px max(14px, env(safe-area-inset-left, 0px)); }
+#ss-x { position: sticky; top: 0; float: right; z-index: 2; margin: -4px -4px 0 8px; width: 40px; height: 40px; font-size: 22px; line-height: 1;
+  padding: 0; background: var(--panel-2); border-radius: 50%; }
+#site-sheet .pop .ph { max-width: 100%; }
+#toast { position: fixed; z-index: 1500; left: 50%; bottom: calc(var(--tabs-h) + 14px); transform: translateX(-50%); max-width: min(460px, calc(100% - 28px));
+  background: var(--panel-2); border: 1px solid var(--accent); border-radius: 4px; padding: 9px 13px; font-size: 13px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5); }
+:root { --tabs-h: 0px; }
 .hz { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 2px; white-space: nowrap; }
 .hz.hi { background: var(--flare); color: var(--accent-ink); }
 .hz.el { border: 1px solid var(--flare); color: var(--ink); font-weight: 500; }
@@ -239,17 +249,59 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
 .leaflet-marker-icon.cl { background: rgba(25, 29, 20, 0.92); color: var(--ink); border: 2px solid var(--accent); border-radius: 50%;
   display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 500; }
 @media (max-width: 860px) {
-  .shell { flex-direction: column; overflow-y: auto; }
-  aside { width: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--line);
-    padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  aside.closed { display: none; }
-  #f-toggle { display: inline-block !important; }
-  main { overflow: visible; padding-left: max(16px, env(safe-area-inset-left, 0px)); }
-  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Phones: one view at a time, picked from the tab bar at the bottom. The map stays laid out underneath
+     every view, so Leaflet never sees a zero-size map; the list, filters and plan slide over it. */
+  html, body { height: 100%; overflow: hidden; } body { height: 100dvh; }
+  header { padding-block: 8px; gap: 8px; flex-wrap: nowrap; }
+  header .tag, header > p { display: none; }
+  .brand { flex: 1; min-width: 0; gap: 8px; } .brand svg { width: 26px; height: 26px; }
+  h1 { font-size: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #how-open, .offbox > summary { padding: 7px 10px; font-size: 13px; white-space: nowrap; }
+  #f-toggle { display: none !important; }
+  .shell { flex-direction: column; overflow: hidden; padding-bottom: var(--tabs-h); }
+  main { overflow: hidden; gap: 8px; padding: 8px max(10px, env(safe-area-inset-right, 0px)) 8px max(10px, env(safe-area-inset-left, 0px)); }
+  .presets-h { display: none; }
+  .guide { padding: 8px 10px; font-size: 12.5px; } .guide ol { gap: 2px; }
+  .kpis { display: flex; overflow-x: auto; gap: 6px; scrollbar-width: none; flex: none; }
+  .kpis::-webkit-scrollbar, .picks::-webkit-scrollbar { display: none; }
+  .kpi { flex: none; padding: 4px 10px; display: flex; align-items: baseline; gap: 6px; border-top-width: 1px; }
+  .kpi.hot { border-color: var(--accent); }
+  .kpi b { display: inline; font-size: 16px; } .kpi span { font-size: 11.5px; white-space: nowrap; }
+  .active { flex: none; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .active .fchip, .active span { flex: none; white-space: nowrap; }
+  .mapwrap { flex: 1 1 auto; height: auto !important; min-height: 200px; }
+  body.sheet-on main > :not(.mapwrap) { display: none; }
+  #plan, #listings, aside { display: none; }
+  .sheet { display: flex !important; flex-direction: column; position: fixed; z-index: 1300; left: 0; right: 0; top: var(--top, 50px);
+    bottom: var(--tabs-h); overflow-y: auto; overscroll-behavior: contain; background: var(--bg); gap: 12px;
+    padding: 12px max(14px, env(safe-area-inset-right, 0px)) 16px max(14px, env(safe-area-inset-left, 0px)); }
+  aside.sheet { background: var(--panel); width: auto; border-right: 0; padding-bottom: 0; }
+  .ffoot { display: flex; gap: 8px; position: sticky; bottom: 0; margin: auto -14px 0; padding: 10px 14px calc(10px + 0px);
+    background: var(--panel); border-top: 1px solid var(--line); }
+  .ffoot button { padding: 11px 12px; font-size: 15px; } .ffoot .primary { flex: 1; }
+  #tabs { display: flex; position: fixed; z-index: 1400; left: 0; right: 0; bottom: 0; background: var(--panel); border-top: 1px solid var(--line);
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  #tabs button { flex: 1; border: 0; border-radius: 0; background: none; color: var(--muted); padding: 7px 2px 6px; font-size: 11.5px;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; min-height: 54px; }
+  #tabs button svg { width: 22px; height: 22px; }
+  #tabs button[aria-current="page"] { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
+  #tabs .badge { position: absolute; top: 4px; left: calc(50% + 8px); background: var(--accent); color: var(--accent-ink); font-family: var(--mono);
+    font-size: 10px; border-radius: 8px; padding: 0 5px; line-height: 15px; }
+  #tabs .badge:empty { display: none; }
+  #b-layers { display: inline-block; }
+  .base { display: none !important; }
+  .mapbar.open .base { display: flex !important; position: absolute; top: 42px; left: 0; right: 0; flex-wrap: wrap; gap: 4px;
+    background: rgba(25, 29, 20, 0.96); border: 1px solid var(--line); border-radius: 3px; padding: 8px; }
+  .mapbar.open .base button { border: 1px solid var(--line) !important; margin: 0 !important; padding: 8px 10px; }
+  button, select, input[type=search], input[type=number] { min-height: 36px; }
+  .planbtns button { padding: 7px 11px; font-size: 13px; }
+  .leaflet-popup-content { margin: 10px 12px; }
+  .leaflet-container .leaflet-control-zoom a { width: 34px; height: 34px; line-height: 34px; }
   .tiers { grid-template-columns: minmax(0, 1fr); }
   .offpanel { position: fixed; left: 12px; right: 12px; top: 96px; width: auto; max-height: calc(100% - 120px); overflow-y: auto; }
   /* the site list becomes cards: score, name, why, and buttons; everything else is one tap away in Details */
   #listings thead, #listings td.more { display: none; }
+  #listings .lhead h2 { flex-basis: 100%; }
   #listings table, #listings tbody { display: block; }
   #listings tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; padding: 12px; border-bottom: 1px solid var(--line); }
   #listings tbody tr:last-child { border-bottom: 0; }
@@ -262,8 +314,7 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   .base { flex-wrap: wrap; row-gap: 4px; }
   .seg button, .base button { padding: 6px 7px; font-size: 13px; }
   #map-msg { top: auto; bottom: 46px; }
-  .mapbar { position: absolute; top: 10px; left: 54px; right: 10px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; }
-  .mapwrap { height: 62vh; }
+  .mapbar { position: absolute; top: 10px; left: 56px; right: 10px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 /* required styles */
@@ -1123,6 +1174,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
     </details>
     <p class="note"><b style="color:var(--ink)">Every site here belongs to someone until you buy it.</b> This is a shortlist of land you may be able to acquire, not permission to enter or occupy anything. <a href="#" data-how="1">How it works and what the limits are</a></p>
+    <div class="ffoot"><button id="ff-clear">Clear all</button><button class="primary" id="ff-show">Show sites</button></div>
 
   </aside>
   <main>
@@ -1157,7 +1209,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
     <div class="active" id="active" aria-label="Filters switched on"></div>
     <div class="mapwrap">
       <div id="map"><p id="loading" style="padding:16px;color:var(--muted)">Loading the site list. The first visit downloads about 55 MB…</p></div>
-      <div class="mapbar">
+      <div class="mapbar" id="mapbar">
+      <button id="b-layers" aria-expanded="false" aria-controls="base">Layers</button>
       <div class="base" role="group" aria-label="Map layers" id="base">
         <button id="b-st" aria-pressed="true" hidden>Streets</button><button id="b-tp" aria-pressed="false" hidden>Topo</button><button id="b-ae" aria-pressed="false" hidden>Aerial</button>
         <button id="b-pub" aria-pressed="false" style="margin-left:6px" hidden>Public land</button>
@@ -1182,7 +1235,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </section>
     <section id="listings">
       <div class="lhead">
-        <h2>Sites in map view &middot; <span id="l-n" style="color:var(--ink)">0</span></h2>
+        <h2>Sites in map view &middot; <span id="l-n" style="color:var(--ink)">0</span><span id="l-of" class="s" style="text-transform:none;letter-spacing:0;font-family:var(--sans)"></span></h2>
         <select id="l-sort" aria-label="Sort sites"><option value="score">Best bug-out score</option>
           <option value="water">Closest to water</option><option value="far">Farthest from a city</option><option value="near" id="o-near" disabled>Closest to my start</option>
           <option value="lead">Easiest to get</option></select>
@@ -1199,6 +1252,14 @@ svg.leaflet-image-layer.leaflet-interactive path {
     </section>
   </main>
 </div>
+<div id="toast" role="status" hidden></div>
+<section id="site-sheet" aria-label="Site details" hidden><button id="ss-x" aria-label="Close site details">&times;</button><div id="ss-body"></div></section>
+<nav id="tabs" aria-label="Views">
+  <button data-view="map" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z M9 4v14 M15 6v14"/></svg>Map</button>
+  <button data-view="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>List<span class="badge" id="tb-n"></span></button>
+  <button data-view="filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>Filters<span class="badge" id="tb-f"></span></button>
+  <button data-view="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Plan<span class="badge" id="tb-p"></span></button>
+</nav>
 <script src="lib/leaflet.js"></script>
 <script src="lib/leaflet.markercluster.js"></script>
 <script src="lib/leaflet-heat.js"></script>
@@ -1407,7 +1468,8 @@ function marker(i) {
   if (!markers[i]) {
     const r = R[i];
     markers[i] = L.circleMarker([r[0], r[1]], {radius: 4 + r[2] / 22, color: '#0b0d08', weight: 1, fillColor: TCOL[tier(r[2])[1]], fillOpacity: 0.95});
-    markers[i].bindPopup(() => popup(i), {maxWidth: 320, maxHeight: Math.max(220, map.getSize().y - 70)});
+    markers[i].on('click', e => { L.DomEvent.stopPropagation(e); if (PH.matches) { siteSheet(i); return; }
+      L.popup({maxWidth: 320, maxHeight: Math.max(220, map.getSize().y - 70)}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); });
   }
   return markers[i];
 }
@@ -1423,6 +1485,8 @@ const getChips = r => CATS.filter((c, k) => r[3] & (1 << k)).map(c => `<span cla
   + ((r[4] & 1) && !(r[3] & estateBit) ? '<span class="chip o">Estate / heirs on title</span>' : '')
   + ((r[4] & 2) ? '<span class="chip o">Attorney or administrator on record</span>' : '');
 function openSite(i, zoom) {                // show a site's details wherever the map layers are at
+  go('map');
+  if (PH.matches) { const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 15), {animate: false}); siteSheet(i); return; }
   const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 16));
   document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'});
   setTimeout(() => { syncLayers();
@@ -1466,6 +1530,7 @@ function popup(i) {
     <a href="${gsat(r)}" target="_blank" rel="noopener">Satellite</a>
     <a href="${gearth(r)}" target="_blank" rel="noopener">Google Earth</a>
     <a href="https://maps.apple.com/?daddr=${r[0]},${r[1]}" target="_blank" rel="noopener">Apple Maps</a>
+    <a href="#" data-share="${i}">Share</a>
     <a href="${esc(src)}" target="_blank" rel="noopener">Source record</a>
     <a href="${q(pl + ' county probate court case search')}" target="_blank" rel="noopener">Probate docket</a>
     <a href="${q(pl + ' county tax collector property search ' + (r[12] || ''))}" target="_blank" rel="noopener">Tax records</a></div></div>`;
@@ -1665,7 +1730,7 @@ function tripText(p, t) {                  // plain-language lines, shared by th
   return out;
 }
 function renderPlan() {
-  const v = vehicle();
+  const v = vehicle(); tabBadges();
   ringLayer.clearLayers(); tripLayer.clearLayers();
   if (home) [[v.leg, 'One tank, with reserve'], [v.leg * 2, 'Two tanks']].forEach(([mi, label], n) =>
     L.circle([home.lat, home.lon], {radius: mi * 1609.34, color: css('--accent'), weight: 1, dashArray: n ? '4 6' : null, fill: false, interactive: false})
@@ -1717,8 +1782,10 @@ function planSheet() {
 const savePlan = () => { try { localStorage.setItem('bo-plan', JSON.stringify(plan)); } catch (e) {} guide(); };
 document.addEventListener('click', e => {
   const add = e.target.closest('[data-tier]'), show = e.target.closest('[data-show]'), drop = e.target.closest('[data-drop]'), go = e.target.closest('[data-go]');
-  if (add) { act = +add.dataset.tier; plan[act] = snap(+add.dataset.i); savePlan(); renderPlan(); map.closePopup(); $('plan').scrollIntoView({block: 'nearest'}); }
+  if (add) { act = +add.dataset.tier; plan[act] = snap(+add.dataset.i); savePlan(); renderPlan(); map.closePopup();
+    if (PH.matches) toast(`Added to your plan as ${TIERS[act].name}. Open Plan to see the trip.`); else $('plan').scrollIntoView({block: 'nearest'}); }
   else if (show) { act = +show.dataset.show; renderPlan(); const p = plan[act];
+    go('map');
     if (home && p) map.fitBounds(L.latLngBounds([[home.lat, home.lon], [p.lat, p.lon]]).pad(0.2)); else if (p) map.setView([p.lat, p.lon], 9);
     document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'}); }
   else if (drop) { plan[+drop.dataset.drop] = null; savePlan(); renderPlan(); }
@@ -1886,7 +1953,7 @@ function renderChips() {
       : '<span class="none">No single filter is the cause; try Clear all.</span>')); }
   document.querySelectorAll('details.grp').forEach(g => { let n = FILTERS.filter(f => g.contains($(f[0])) && isOn(f)).length;
     if (g.contains($('sigs')) && nSig < sig.length) n++; g.querySelector('.cnt').textContent = n ? n + ' on' : ''; });
-  guide();
+  guide(); tabBadges();
 }
 $('active').addEventListener('click', e => { const b = e.target.closest('[data-off]'); if (!b) return; const id = b.dataset.off;
   if (id === 'all') { clear(); $('f-state').value = ''; $('f-reach').value = '0'; $('f-cross').checked = false; }
@@ -1988,6 +2055,7 @@ function syncLayers() {                    // heat for the overview, individual 
 function listings() {
   const b = map.getBounds(), s = $('l-sort').value; inView = [];
   for (const i of visible) if (b.contains([R[i][0], R[i][1]])) inView.push(i);
+  tabBadges();
   if (s === 'water') inView.sort((a, b) => (R[a][16] < 0 ? 1e9 : R[a][16]) - (R[b][16] < 0 ? 1e9 : R[b][16]));
   else if (s === 'far') inView.sort((a, b) => R[b][20] - R[a][20]);
   else if (s === 'near' && home) inView.sort((a, b) => dist[a] - dist[b]);
@@ -1996,7 +2064,7 @@ function listings() {
 }
 function table() {
   const pages = Math.max(1, Math.ceil(inView.length / PAGE));
-  $('l-n').textContent = fmt(inView.length); $('l-pg').textContent = `${page + 1} / ${fmt(pages)}`;
+  $('l-n').textContent = fmt(inView.length); $('l-of').textContent = inView.length < visible.length ? ` of ${fmt(visible.length)} (zoom the map out to list more)` : ''; $('l-pg').textContent = `${page + 1} / ${fmt(pages)}`;
   $('l-prev').disabled = page === 0; $('l-next').disabled = page >= pages - 1;
   $('rows').innerHTML = inView.slice(page * PAGE, page * PAGE + PAGE).map(i => { const r = R[i], t = tier(r[2]);
     return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" title="${TIER_HELP[t[0]]}" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
@@ -2143,8 +2211,81 @@ if (SITE && 'serviceWorker' in navigator && location.protocol.startsWith('http')
     saveTopoImpl(urls, say, 'this area');
   });
 }
+// ---- phones: one view at a time (Map, List, Filters, Plan), picked from the tab bar ----
+const PH = matchMedia('(max-width: 860px)');
+let view = 'map';
+const SHEET = {list: $('listings'), filters: document.querySelector('aside'), plan: $('plan')};
+function layoutVars() {
+  const st = document.documentElement.style;
+  st.setProperty('--top', Math.round(document.querySelector('header').getBoundingClientRect().bottom) + 'px');
+  st.setProperty('--tabs-h', PH.matches ? $('tabs').offsetHeight + 'px' : '0px');
+}
+function go(v, push = true) {
+  if (!PH.matches) return;
+  if (v === view) { if (SHEET[v]) SHEET[v].scrollTop = 0; return; }
+  view = v; closeSheet(); $('toast').hidden = true;
+  Object.entries(SHEET).forEach(([k, el]) => el.classList.toggle('sheet', k === v));
+  document.querySelectorAll('#tabs button').forEach(b => b.toggleAttribute('aria-current', b.dataset.view === v));
+  document.querySelectorAll('#tabs button[aria-current]').forEach(b => b.setAttribute('aria-current', 'page'));
+  if (push) history.pushState({bo: v}, '');
+  if (v === 'map') setTimeout(() => map.invalidateSize({pan: false}), 0);
+}
+let selMark = null;
+function siteSheet(i) {                    // phones: a site's details in a sheet over the lower part of the map
+  const r = R[i], sh = $('site-sheet'); siteSheet.at = Date.now();
+  $('ss-body').innerHTML = popup(i); sh.hidden = false; sh.scrollTop = 0; map.closePopup();
+  document.body.classList.add('sheet-on'); map.invalidateSize({pan: false});
+  if (selMark) selMark.remove();
+  selMark = L.circleMarker([r[0], r[1]], {radius: 13, color: css('--accent'), weight: 3, fill: false, interactive: false}).addTo(map);
+  const below = sh.getBoundingClientRect().height, h = map.getSize().y;          // keep the site in the part of the map left showing
+  const pt = map.latLngToContainerPoint([r[0], r[1]]), want = Math.max(40, (h - below) / 2);
+  map.panBy([0, pt.y - want], {animate: false});
+}
+function closeSheet() { if ($('site-sheet').hidden) return; $('site-sheet').hidden = true;
+  document.body.classList.remove('sheet-on'); map.invalidateSize({pan: false}); if (selMark) { selMark.remove(); selMark = null; } }
+$('ss-x').addEventListener('click', closeSheet);
+map.on('click', () => { if (!$('site-sheet').hidden && Date.now() - siteSheet.at > 400) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('site-sheet').hidden) closeSheet(); });
+function toast(t, ms = 4500) { const el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, ms); }
+function tabBadges() {                     // counts on the tab bar and on the filter sheet's button
+  try { tabCounts(); } catch (e) {}        // can run before the site list exists
+}
+function tabCounts() {
+  const n = visible.length, on = FILTERS.filter(isOn).length + ([...document.querySelectorAll('#sigs input')].some(c => !c.checked) ? 1 : 0);
+  let np = 0; try { np = plan.filter(Boolean).length; } catch (e) {}
+  const k = x => x >= 10000 ? Math.round(x / 1000) + 'k' : fmt(x);
+  $('tb-n').textContent = k(inView.length);
+  $('tb-f').textContent = on || ''; $('tb-p').textContent = np || '';
+  $('ff-show').textContent = n ? `Show ${fmt(n)} site${n === 1 ? '' : 's'}` : 'No sites match';
+}
+$('tabs').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) go(b.dataset.view); });
+window.addEventListener('popstate', e => go((e.state && e.state.bo) || 'map', false));
+history.replaceState(Object.assign({}, history.state, {bo: 'map'}), '');
+$('ff-show').addEventListener('click', () => go('map'));
+$('ff-clear').addEventListener('click', () => { clear(); $('f-state').value = ''; $('f-reach').value = '0'; $('f-cross').checked = false; fillStates(); apply(false); });
+$('b-layers').addEventListener('click', () => { const open = $('mapbar').classList.toggle('open'); $('b-layers').setAttribute('aria-expanded', open); });
+map.on('click', () => { if ($('mapbar').classList.contains('open')) { $('mapbar').classList.remove('open'); $('b-layers').setAttribute('aria-expanded', 'false'); } });
+$('sp-pick').addEventListener('click', () => { if (PH.matches && picking) { go('map'); toast('Tap the map where you would leave from.', 8000); } });
+const relayout = () => { layoutVars(); if (!PH.matches) { Object.values(SHEET).forEach(el => el.classList.remove('sheet')); view = 'map'; } map.invalidateSize({pan: false}); };
+PH.addEventListener('change', relayout); window.addEventListener('resize', layoutVars);
+layoutVars(); setTimeout(relayout, 0);
+// Share a site: a link that opens this page on that site.
+document.addEventListener('click', e => { const a = e.target.closest('[data-share]'); if (!a) return; e.preventDefault();
+  const r = R[+a.dataset.share], url = location.href.split('#')[0] + `#site=${r[0].toFixed(5)},${r[1].toFixed(5)},${r[7].slice(0, 2)}`;
+  if (navigator.share) navigator.share({title: title(r), text: 'A site on BuggedOut USA', url}).catch(() => {});
+  else if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => toast('Link copied.'), () => prompt('Copy this link', url));
+  else prompt('Copy this link', url); });
+(function openShared() {                    // #site=lat,lon,state from a shared link
+  const m = location.hash.match(/site=(-?[\d.]+),(-?[\d.]+)(?:,(\d\d))?/); if (!m) return;
+  const lat = +m[1], lon = +m[2], st = m[3];
+  const find = () => R.findIndex(r => Math.abs(r[0] - lat) < 2e-5 && Math.abs(r[1] - lon) < 2e-5);
+  const show = () => { const i = find(); if (i >= 0) openSite(i, 15); else { go('map'); map.setView([lat, lon], 15); toast('That site is no longer on the list; showing where it was.', 7000); } };
+  if (find() < 0 && st && D.more[st] && !D.more[st].done) {
+    ensureMore([st]); let n = 0; const t = setInterval(() => { if (D.more[st].done || ++n > 120) { clearInterval(t); show(); } }, 500);
+  } else setTimeout(show, 300);
+})();
 $('guide-x').addEventListener('click', () => { try { localStorage.setItem('bo-guide', '0'); } catch (e) {} $('guide').hidden = true; });
-const openStart = () => { const as = document.querySelector('aside'); if (as.classList.contains('closed')) $('f-toggle').click();
+const openStart = () => { const as = document.querySelector('aside'); if (PH.matches) go('filters'); else if (as.classList.contains('closed')) $('f-toggle').click();
   as.querySelector('details.grp').open = true; $('sp-q').focus(); $('sp-q').scrollIntoView({block: 'center'}); };
 const how = $('how');
 document.addEventListener('click', e => {
