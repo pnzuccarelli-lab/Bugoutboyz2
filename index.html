@@ -137,7 +137,7 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 .seg button + button, .base button + button { border-left: 0; }
 .base button[style*="margin-left"] { border-left: 1px solid var(--line); }
 .mapbar { display: contents; }
-#tabs, .ffoot, #b-layers { display: none; }
+#tabs, .ffoot, #b-layers, #plan-print { display: none; }
 #site-sheet { position: fixed; z-index: 1350; left: 0; right: 0; bottom: var(--tabs-h); max-height: 52%; overflow-y: auto; overscroll-behavior: contain;
   background: var(--panel); border-top: 2px solid var(--accent); border-radius: 10px 10px 0 0; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.55);
   padding: 12px max(14px, env(safe-area-inset-right, 0px)) 16px max(14px, env(safe-area-inset-left, 0px)); }
@@ -178,11 +178,6 @@ button.primary, button[aria-pressed="true"] { background: var(--accent); color: 
 .planbtns button { padding: 2px 8px; font-size: 12px; }
 .wp { background: var(--bg); color: var(--accent); border: 2px solid var(--accent); border-radius: 50%; font-family: var(--mono); font-size: 11px;
   font-weight: 600; display: flex; align-items: center; justify-content: center; }
-@media print {
-  header, aside, .picks, .kpis, .mapwrap, #listings, .guide, .presets-h, .active, dialog, .lhead button, #pl-msg, .tier-card .row { display: none !important; }
-  html, body, .shell, main { display: block; height: auto; overflow: visible; background: #fff; color: #000; }
-  .tier-card, .trip { border-color: #999; background: #fff; break-inside: avoid; }
-  .tier-card h3, .trip h4, h2, .s, a { color: #000 !important; }
 }
 .lhead { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
 .lhead h2 { margin: 0; flex: 1; min-width: 180px; }
@@ -322,6 +317,22 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   .mapbar { position: absolute; top: 10px; left: 56px; right: 10px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 }
 @media (min-width: 861px) and (max-height: 900px) { .picks { flex: none; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; } .picks button { flex: none; } }
+/* Printing (and Save as PDF): only the trip plan, black on white. This sits after the phone rules because a printed page is
+   narrow enough to match them. */
+@media print {
+  header, aside, .picks, .kpis, .mapwrap, #listings, .guide, .presets-h, .active, dialog, .lhead button, #pl-msg, .tier-card .row,
+    #tabs, #toast, #site-sheet, .ffoot, .trip button { display: none !important; }
+  html, body { display: block !important; height: auto !important; overflow: visible !important; background: #fff !important; }
+  .shell, main { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+  #plan { display: block !important; position: static !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+  #plan > .lhead, #tiers, #trip { display: none !important; }       /* the printed plan is the full text sheet: start, vehicle and all three trips */
+  #plan-print { display: block !important; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--sans); font-size: 10.5pt; line-height: 1.45; margin: 0; }
+  #plan, #plan * { color: #000 !important; background: transparent !important; }
+  .tiers { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .tier-card, .trip { border-color: #999 !important; break-inside: avoid; }
+  .tier-card.on { border-color: #999 !important; }
+  .trip a { text-decoration: none; }
+}
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 /* required styles */
 
@@ -1238,6 +1249,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
       </div>
       <div class="tiers" id="tiers"></div>
       <div id="trip"></div>
+      <pre id="plan-print"></pre>
     </section>
     <section id="listings">
       <div class="lhead">
@@ -1466,7 +1478,7 @@ const cluster = L.markerClusterGroup({chunkedLoading: true, maxClusterRadius: 46
   spiderfyOnMaxZoom: false, showCoverageOnHover: false,
   iconCreateFunction: c => { const n = c.getChildCount(), s = n < 100 ? 30 : n < 1000 ? 38 : 46;
     return L.divIcon({html: n < 1000 ? n : (n / 1000).toFixed(n < 10000 ? 1 : 0) + 'k', className: 'cl', iconSize: [s, s]}); }});
-{ const rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { if (this._map) rd.call(this); }; }   // a queued redraw can land after the layer is taken off the map
+{ const rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { if (this._map && this._map.getSize().x > 0) rd.call(this); }; }   // a queued redraw can land after the layer is taken off the map
 const heat = L.heatLayer([], {radius: 15, blur: 17, maxZoom: 9, minOpacity: 0.3,
   gradient: {0.2: '#3f5a2a', 0.45: '#8fa33a', 0.65: '#f2a33a', 0.85: '#e8603a', 1: '#fff0c2'}});
 const TCOL = {prime: css('--t-prime'), strong: css('--t-strong'), viable: css('--t-viable'), low: css('--t-low')};
@@ -1775,7 +1787,7 @@ function renderPlan() {
     .bindTooltip('Stop ' + s.n + (s.land ? ': ' + s.land.name : '')).addTo(tripLayer));
 }
 function planSheet() {
-  const lines = ['BUGGEDOUT TRIP PLAN', 'Built ' + new Date().toISOString().slice(0, 10) + ' from data dated ' + D.generated, ''];
+  const lines = ['BUGGEDOUT USA TRIP PLAN', 'Built ' + new Date().toISOString().slice(0, 10) + ' from data dated ' + D.generated, ''];
   lines.push(home ? `START: ${home.label} (${home.lat}, ${home.lon})` : 'START: not set', `VEHICLE: ${fmt(vehicle().range)} miles on a ${vehicle().tank}-gallon tank`, '');
   plan.forEach((p, k) => { lines.push(TIERS[k].name.toUpperCase());
     if (!p) { lines.push('  not chosen', ''); return; }
@@ -2172,7 +2184,8 @@ function save(text, name, type, n) {
 if (TILES) {                               // saving and printing the plan only work outside the hosted preview page
   $('pl-save').hidden = $('pl-print').hidden = false;
   $('pl-save').addEventListener('click', () => save(planSheet(), 'buggedout-plan.txt', 'text/plain', plan.filter(Boolean).length));
-  $('pl-print').addEventListener('click', () => window.print());
+  $('pl-print').addEventListener('click', () => { $('plan-print').textContent = planSheet(); window.print(); });
+  window.addEventListener('beforeprint', () => { $('plan-print').textContent = plan.some(Boolean) ? planSheet() : 'No trip plan yet. Open a site and choose Add to plan, then print.'; });
 }
 if (TILES) {                               // photos and file downloads only work outside the hosted preview page
   $('th-pic').hidden = false; $('dl-csv').hidden = $('dl-kml').hidden = false;
