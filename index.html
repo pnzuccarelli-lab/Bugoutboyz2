@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#11140e">
+<meta name="theme-color" content="#0d0e0e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>body{margin:0}[hidden]{display:none!important}</style>
@@ -15,25 +15,27 @@
 <body>
 <title>BuggedOut USA</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Stencil+One&display=swap">
+<link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Saira+Stencil+One&display=swap">
 <style>
-/* Layout: a field operations board. Dark olive map table, bone ink, signal-amber for what matters.
+/* Look: a field manual crossed with a tactical dashboard. Matte black and charcoal, bone ink, coyote tan for labels,
+   burnt orange only for the main action and top-tier sites, survival red only for warnings. Hard edges throughout.
+   Layout: a field operations board.
    Filters ("the brief") on the left; score tiles, map and site list on the right; stacks on phones. */
 :root {
-  --bg: #11140e; --panel: #191d14; --panel-2: #21261a; --ink: #e8e4d2; --muted: #a0a28b; --line: #363c2a;
-  --land: #1e2418; --water: #0d100b; --border-st: #6f7658; --border-co: #333a27;
-  --accent: #f2a33a; --accent-ink: #15170f; --flare: #e8603a;
-  --t-prime: #f2a33a; --t-strong: #9ccb5e; --t-viable: #cfc48a; --t-low: #7d8070;
+  --bg: #0d0e0e; --panel: #151616; --panel-2: #1e2020; --ink: #e9e6dc; --muted: #9c9e97; --line: #363938; --line-2: #575b55;
+  --land: #1a1c1b; --water: #090a0a; --border-st: #6d7064; --border-co: #2f3230;
+  --accent: #e8641b; --accent-ink: #0d0e0e; --flare: #e5392b; --tan: #c2a878; --olive: #8a9a4b;
+  --t-prime: #e8641b; --t-strong: #9aab52; --t-viable: #c2a878; --t-low: #747771;
   --p-water: #5aa9e6; --p-remote: #f2a33a; --p-room: #c8b08a; --p-shelter: #dc8463; --p-obtain: #9fb4c7;
   --p-safety: #e6d15a; --p-public: #46b58c; --p-grow: #7ac74f; --p-community: #b596e6; --p-laws: #e08fb8;
   --g-east: #6fa8ff; --g-west: #ff8a5c; --g-tx: #ffd84a; --v-hi: #ff4fa3; --v-mid: #ffb347; --v-lo: #c9b8ff;
   --l-game: #d9734a; --l-fs: #4f9f5a; --l-blm: #c9a94f; --l-nps: #9a82e0; --l-fws: #4aa9b0; --l-state: #86c2a0;
   --c-escheat: #f06292; --c-gov_surplus: #a98be8; --c-tax_sale: #f59a4a; --c-estate_owner: #62a8f2;
   --c-land_bank: #3fc4b2; --c-tax_delinquent: #b9be6a;
-  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sans: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
-  --display: "Chakra Petch", "IBM Plex Sans", system-ui, sans-serif;
-  --stencil: "Saira Stencil One", "Chakra Petch", Impact, sans-serif;
+  --display: "Barlow Condensed", "Barlow", "Arial Narrow", system-ui, sans-serif;
+  --stencil: "Saira Stencil One", "Barlow Condensed", Impact, sans-serif;
   color-scheme: dark;
 }
 html, body { height: 100%; }
@@ -245,6 +247,131 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
 .links { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; margin-top: 8px; }
 .leaflet-marker-icon.cl { background: rgba(25, 29, 20, 0.92); color: var(--ink); border: 2px solid var(--accent); border-radius: 50%;
   display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 500; }
+
+/* ---------- field-manual layer: hard edges, compartments, spec tables ---------- */
+button, select, input, .kpi, .tier-card, .trip, .tw, .mapwrap, .guide, .fchip, .chip, .hz, .legend, #toast, dialog#how, .offpanel, .offbox > summary,
+  .cnt, .warn, .dot, .sw, .ph, #sp-list, #map-msg, #ss-x, .bar, .trk, .leaflet-container .leaflet-popup-content-wrapper, .leaflet-bar, .leaflet-bar a,
+  .leaflet-marker-icon.cl, #site-sheet, #offline { border-radius: 0 !important; }
+html { scrollbar-color: var(--line-2) var(--bg); }
+body { font-size: 14.5px; letter-spacing: 0.012em;
+  background: var(--bg) linear-gradient(rgba(233, 230, 220, 0.022) 1px, transparent 1px) 0 0 / 100% 40px; }
+a { color: var(--tan); text-underline-offset: 2px; }
+a:hover { color: var(--ink); }
+header { background: var(--panel); border-bottom: 1px solid var(--line-2); position: relative; padding-top: 16px; }
+header::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px;
+  background: repeating-linear-gradient(-45deg, var(--accent) 0 10px, #0d0e0e 10px 20px); }
+.brand { color: var(--accent); }
+h1 { color: var(--ink); text-transform: uppercase; font-size: 25px; letter-spacing: 0.06em; }
+h1 span { color: var(--accent); }
+header .tag { font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tan); }
+header > p:not(.tag) { font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
+h2, .grp > summary, .offpanel h3, .tier-card h3, .trip h4, .how h3 { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--tan); }
+.how h3, .trip h4 { color: var(--muted); font-size: 14px; }
+h2::after, .grp > summary::after { background: var(--line-2); }
+aside { gap: 8px; counter-reset: sec; background: var(--bg); border-right: 1px solid var(--line-2); }
+.grp { counter-increment: sec; border: 1px solid var(--line); border-left: 3px solid var(--line-2); background: var(--panel); padding: 9px 12px; }
+.grp[open] { border-left-color: var(--olive); }
+.grp > summary::before { content: counter(sec, decimal-leading-zero); width: auto; color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0; }
+.grp[open] > summary::before { content: counter(sec, decimal-leading-zero); color: var(--olive); }
+.grp > summary::after { content: ""; }
+.grp > summary .cnt { order: 3; }
+.grp > summary { gap: 10px; }
+.grp:not([open]) > summary::after { background: repeating-linear-gradient(90deg, var(--line-2) 0 4px, transparent 4px 8px); }
+.cnt { background: var(--olive); color: #0d0e0e; font-weight: 500; text-transform: uppercase; }
+.fl, .note, .s { letter-spacing: 0.01em; }
+.fl { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; gap: 4px; }
+.fl select, .fl input { font-family: var(--sans); font-size: 14px; text-transform: none; letter-spacing: 0.01em; }
+select, input[type=search], input[type=number], button { background: #0a0b0b; border: 1px solid var(--line-2); }
+button { font-family: var(--display); font-weight: 600; font-size: 14.5px; letter-spacing: 0.09em; text-transform: uppercase; }
+button:hover:not(:disabled) { border-color: var(--tan); }
+button.primary, button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.seg button[aria-pressed="true"], .base button[aria-pressed="true"] { background: var(--tan); border-color: var(--tan); }
+:focus-visible { outline: 2px solid var(--tan); }
+.guide { border: 1px solid var(--line-2); border-left: 4px solid var(--accent); background: var(--panel); }
+.picks { gap: 0; }
+.picks button { border-left: 3px solid var(--olive); margin: 0 -1px -1px 0; padding: 8px 14px; font-size: 15.5px; letter-spacing: 0.08em; }
+.picks button small { font-size: 11.5px; text-transform: none; letter-spacing: 0.01em; margin-top: 1px; }
+.picks button[aria-pressed="true"] { border-left-color: #0d0e0e; }
+.kpis { gap: 0; border: 1px solid var(--line-2); background: var(--panel); }
+.kpi { border: 0; border-right: 1px solid var(--line); background: none; padding: 9px 14px; }
+.kpi:last-child { border-right: 0; }
+.kpi.hot { box-shadow: inset 0 3px 0 var(--accent); }
+.kpi b { font-size: 30px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.05; }
+.kpi span { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.fchip { font-family: var(--mono); font-size: 11px; background: var(--panel); border-color: var(--line-2); padding: 3px 8px; }
+.fchip.all { border-color: var(--tan); color: var(--tan); }
+.active > span:first-child { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.mapwrap { border: 1px solid var(--line-2); }
+.mapwrap::after { content: ""; position: absolute; inset: 5px; z-index: 450; pointer-events: none; --c: var(--tan);
+  background: linear-gradient(var(--c), var(--c)) left top / 16px 2px, linear-gradient(var(--c), var(--c)) left top / 2px 16px,
+    linear-gradient(var(--c), var(--c)) right top / 16px 2px, linear-gradient(var(--c), var(--c)) right top / 2px 16px,
+    linear-gradient(var(--c), var(--c)) left bottom / 16px 2px, linear-gradient(var(--c), var(--c)) left bottom / 2px 16px,
+    linear-gradient(var(--c), var(--c)) right bottom / 16px 2px, linear-gradient(var(--c), var(--c)) right bottom / 2px 16px;
+  background-repeat: no-repeat; opacity: 0.8; }
+.legend { background: rgba(13, 14, 14, 0.94); border-color: var(--line-2); font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+#map-msg, #toast { background: #0a0b0b; border: 1px solid var(--line-2); border-left: 4px solid var(--accent); }
+.tw { border-color: var(--line-2); background: var(--panel); }
+th { background: #0a0b0b; color: var(--ink); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; border-bottom: 1px solid var(--line-2); }
+td { border-bottom-color: var(--line); }
+tbody tr:hover td { background: var(--panel-2); }
+.t1 { font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.2; }
+.id, td.geo { font-family: var(--mono); }
+.score .v, .pop .top .v { font-weight: 700; letter-spacing: 0.01em; }
+.score .v { font-size: 34px; } .pop .top .v { font-size: 46px; }
+.score .tier, .pop .top .tier { font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; }
+.bar, .trk { position: relative; height: 7px; background: #0a0b0b; }
+.bar::after, .trk::after { content: ""; position: absolute; inset: 0; pointer-events: none;      /* segment the bars like a gauge */
+  background: repeating-linear-gradient(90deg, transparent 0 6px, var(--panel) 6px 8px); }
+.chip { font-family: var(--mono); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; }
+.chip.o { border-color: var(--line-2); }
+.hz { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.hz.hi { background: var(--flare); color: #fff; }
+.hz.el { border-color: var(--flare); }
+.warn { border-color: var(--flare); background: #0a0b0b; }
+.none { color: var(--flare); }
+.why .g { color: var(--olive); font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.why .w { color: var(--flare); font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.bdgs { display: flex; flex-wrap: wrap; gap: 0; margin: 8px 0 2px; }
+.bdg { display: inline-flex; align-items: center; gap: 5px; margin: 0 -1px -1px 0; padding: 3px 8px 3px 6px; border: 1px solid var(--line-2); background: #0a0b0b;
+  font-family: var(--mono); font-size: 11px; white-space: nowrap; color: var(--ink); }
+.bdg svg { width: 14px; height: 14px; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.bdg b { font-weight: 500; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.bdg.ok { box-shadow: inset 0 -2px 0 var(--olive); } .bdg.ok svg { stroke: var(--olive); }
+.bdg.bad { box-shadow: inset 0 -2px 0 var(--flare); color: #fff; } .bdg.bad svg { stroke: var(--flare); } .bdg.bad b { color: var(--flare); }
+.bdg.na { color: var(--muted); }
+.ph { border: 1px solid var(--line-2); }
+.ph img { filter: grayscale(0.5) contrast(1.15) brightness(0.9); }
+.ph::before { content: "AERIAL"; position: absolute; z-index: 1; left: 0; top: 0; padding: 1px 6px; background: rgba(13, 14, 14, 0.85); color: var(--tan);
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; line-height: 1.6; }
+.ph::after { border-radius: 0; border-color: var(--accent); width: 14px; height: 14px; margin: -8px 0 0 -8px; }
+.pop h3 { font-size: 20px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.15; }
+.pop .where { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.pop dl { gap: 0 12px; border-top: 1px solid var(--line-2); }                          /* a specification table */
+.pop dt, .pop dd { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.pop dt { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tan); padding-top: 7px; }
+.brk { font-size: 12.5px; gap: 4px 10px; }
+.brk > span:nth-child(3n+1) { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.links { gap: 0; margin-top: 10px; }
+.links a { font-family: var(--display); font-weight: 600; font-size: 13.5px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none;
+  color: var(--ink); border: 1px solid var(--line-2); padding: 4px 9px; margin: 0 -1px -1px 0; background: #0a0b0b; }
+.links a:hover { border-color: var(--tan); color: var(--tan); position: relative; }
+.planbtns { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.planbtns button { font-size: 13px; }
+.tiers { gap: 0; }
+.tier-card { margin: 0 -1px -1px 0; border-color: var(--line-2); border-top: 3px solid var(--line-2); }
+.tier-card.on { border-color: var(--line-2); border-top-color: var(--accent); background: var(--panel-2); }
+.trip { border-color: var(--line-2); }
+.trip .big { font-size: 24px; font-weight: 700; letter-spacing: 0.03em; }
+.gloss dt { font-family: var(--display); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tan); }
+dialog#how { border: 1px solid var(--line-2); border-top: 4px solid var(--accent); }
+.key b { color: var(--tan); }
+.homepin { border-radius: 50% 50% 50% 0 !important; border-color: #0d0e0e; }
+.leaflet-container .leaflet-popup-content-wrapper { border-color: var(--line-2); border-top: 3px solid var(--accent); }
+.leaflet-marker-icon.cl { background: rgba(13, 14, 14, 0.94); border: 2px solid var(--tan); font-weight: 500; }
+.offbox.saved > summary { border-color: var(--olive); color: var(--olive); }
+#offline { background: var(--flare); color: #fff; font-family: var(--mono); text-transform: uppercase; }
+#site-sheet { border-top: 3px solid var(--accent); }
 @media (max-width: 860px) {
   /* Phones: one view at a time, picked from the tab bar at the bottom. The map stays laid out underneath
      every view, so Leaflet never sees a zero-size map; the list, filters and plan slide over it. */
@@ -284,7 +411,17 @@ td.pic { padding: 7px 4px 7px 10px; width: 96px; }
   #tabs button { flex: 1; border: 0; border-radius: 0; background: none; color: var(--muted); padding: 7px 2px 6px; font-size: 11.5px;
     display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; min-height: 54px; }
   #tabs button svg { width: 22px; height: 22px; }
-  #tabs button[aria-current="page"] { color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
+  #tabs { border-top: 1px solid var(--line-2); }
+  #tabs button { font-size: 12.5px; letter-spacing: 0.1em; }
+  #tabs button[aria-current="page"] { color: var(--ink); box-shadow: inset 0 3px 0 var(--accent); }
+  #tabs button[aria-current="page"] svg { color: var(--accent); }
+  #tabs .badge { border-radius: 0; background: var(--tan); }
+  h1 { font-size: 19px; }
+  .kpis { border: 0; background: none; gap: 0; } .kpi { border: 1px solid var(--line-2); margin-right: -1px; background: var(--panel); }
+  .kpi.hot { box-shadow: inset 0 2px 0 var(--accent); } .kpi b { font-size: 19px; }
+  .picks button { font-size: 14.5px; }
+  aside.sheet { background: var(--bg); }
+  .ffoot { background: var(--bg); border-top: 1px solid var(--line-2); }
   #tabs .badge { position: absolute; top: 4px; left: calc(50% + 8px); background: var(--accent); color: var(--accent-ink); font-family: var(--mono);
     font-size: 10px; border-radius: 8px; padding: 0 5px; line-height: 15px; }
   #tabs .badge:empty { display: none; }
@@ -1009,8 +1146,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 </style>
 <header>
   <div class="brand">
-    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="12" fill="none" stroke="#f2a33a" stroke-width="2"/><circle cx="17" cy="17" r="3" fill="#f2a33a"/><path d="M17 1v9M17 24v9M1 17h9M24 17h9" stroke="#f2a33a" stroke-width="2" fill="none"/></svg>
-    <h1>BuggedOut USA</h1>
+    <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="17" r="3" fill="currentColor"/><path d="M17 1v9M17 24v9M1 17h9M24 17h9" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+    <h1>BuggedOut <span>USA</span></h1>
   </div>
   <p class="tag">Survival site location engine for when SHTF.</p>
   <p><span id="total"></span> sites scored &middot; <span id="nsrc"></span> public county lists &middot; data refreshed <span id="built"></span>, updated weekly<span id="capnote"></span></p>
@@ -1431,6 +1568,21 @@ const FLOOD_NOTE = 'FEMA flood maps (National Flood Hazard Layer). Many rural co
 const far = r => `${fmt(r[20])} mi from ${D.bigs[r[21]] || 'a city'}`;
 const dens = r => r[22] < 0 ? '' : (r[22] < 1 ? 'under 1 person' : fmt(r[22]) + (r[22] === 1 ? ' person' : ' people')) + ' per sq mi in county';
 // r[18]: footprint (sq ft) of the largest building centred within 50 m of the point; 0 none; -1 not checked
+const ICON = {water: 'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z', flood: 'M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0',
+  road: 'M8 3 5 21M16 3l3 18M12 4v3M12 11v3M12 18v3', soil: 'M12 21v-9M12 12c0-4-3-6-7-6 0 4 3 6 7 6ZM12 14c0-3 2-5 6-5 0 3-2 5-6 5Z',
+  slope: 'M3 19h18L15 6 3 19Z', shelter: 'M4 11l8-7 8 7v9H4v-9ZM10 20v-5h4v5'};
+const bdg = (icon, label, value, state, tip) => `<span class="bdg ${state}" title="${esc(tip)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[icon]}"/></svg><b>${label}</b>${esc(value)}</span>`;
+function badges(r) {                       // the site checks at a glance: olive passes, red needs a look, grey is unknown
+  const out = [];
+  out.push(r[16] < 0 ? bdg('water', 'Water', 'none in 1 mi', 'na', 'No year-round fresh water mapped within a mile')
+    : bdg('water', 'Water', r[16] <= 15 ? 'on site' : miles(r[16]), r[16] <= 805 ? 'ok' : '', 'Distance to the nearest year-round fresh water'));
+  if (r[52] != null && r[52] >= 0) out.push(bdg('flood', 'Flood', ['clear', 'moderate', '100-yr zone', 'floodway'][r[52]], r[52] >= 2 ? 'bad' : r[52] === 0 ? 'ok' : '', FLOOD_NOTE));
+  if (r[53] != null && r[53] >= 0) out.push(bdg('road', 'Road', r[53] >= 1200 ? 'none near' : miles(r[53]), r[53] > 400 ? 'bad' : 'ok', ROAD_NOTE));
+  if (r[51] != null && r[51] >= 0) out.push(bdg('slope', 'Slope', r[51] + '°', r[51] >= 15 ? 'bad' : r[51] < 8 ? 'ok' : '', 'Slope of the ground at the site’s map point'));
+  if (r[55] > 0) out.push(bdg('soil', 'Soil', 'class ' + r[55], r[55] <= 4 ? 'ok' : '', SOIL_NOTE));
+  if (r[18] > 0) out.push(bdg('shelter', 'Bldg', fmt(r[18]) + ' sq ft', 'ok', 'Building footprint detected near the site’s centre point; check the photo'));
+  return `<div class="bdgs">${out.join('')}</div>`;
+}
 const bldg = r => r[18] < 0 ? '<span class="s">not checked</span>' : r[18] === 0 ? '<span class="s">none detected</span>'
   : `~${fmt(Math.round(r[18] / 10) * 10)} sq ft<div class="s">${r[18] >= 500 ? 'house-sized' : 'small structure'}, unverified</div>`;
 const bldgOk = (r, f) => f === 'any' || (f === 'house' ? r[18] >= 500 : f === 'some' ? r[18] > 0 : r[18] === 0);
@@ -1480,7 +1632,7 @@ const cluster = L.markerClusterGroup({chunkedLoading: true, maxClusterRadius: 46
     return L.divIcon({html: n < 1000 ? n : (n / 1000).toFixed(n < 10000 ? 1 : 0) + 'k', className: 'cl', iconSize: [s, s]}); }});
 { const rd = L.HeatLayer.prototype._redraw; L.HeatLayer.prototype._redraw = function () { if (this._map && this._map.getSize().x > 0) rd.call(this); }; }   // a queued redraw can land after the layer is taken off the map
 const heat = L.heatLayer([], {radius: 15, blur: 17, maxZoom: 9, minOpacity: 0.3,
-  gradient: {0.2: '#3f5a2a', 0.45: '#8fa33a', 0.65: '#f2a33a', 0.85: '#e8603a', 1: '#fff0c2'}});
+  gradient: {0.2: '#3b4526', 0.45: '#8a9a4b', 0.65: '#c2a878', 0.85: '#e8641b', 1: '#fff1dc'}});
 const TCOL = {prime: css('--t-prime'), strong: css('--t-strong'), viable: css('--t-viable'), low: css('--t-low')};
 const markers = new Array(R.length);
 function marker(i) {
@@ -1488,7 +1640,7 @@ function marker(i) {
     const r = R[i];
     markers[i] = L.circleMarker([r[0], r[1]], {radius: 4 + r[2] / 22, color: '#0b0d08', weight: 1, fillColor: TCOL[tier(r[2])[1]], fillOpacity: 0.95});
     markers[i].on('click', e => { L.DomEvent.stopPropagation(e); track('site_open', {score: r[2], state: r[7].slice(0, 2)}); if (PH.matches) { siteSheet(i); return; }
-      L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], maxHeight: Math.max(220, map.getSize().y - 100)}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); });
+      L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], autoPanPaddingBottomRight: [10, 24], maxHeight: Math.max(200, map.getSize().y - 190)}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); });
   }
   return markers[i];
 }
@@ -1511,7 +1663,7 @@ function openSite(i, zoom) {
   const r = R[i]; map.setView([r[0], r[1]], Math.max(map.getZoom(), zoom || 16));
   document.querySelector('.mapwrap').scrollIntoView({block: 'nearest'});
   setTimeout(() => { syncLayers();
-    L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], maxHeight: Math.max(220, map.getSize().y - 100), offset: [0, -4]}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); }, 450);
+    L.popup({maxWidth: 320, autoPanPaddingTopLeft: [10, 52], autoPanPaddingBottomRight: [10, 24], maxHeight: Math.max(200, map.getSize().y - 190), offset: [0, -4]}).setLatLng([r[0], r[1]]).setContent(popup(i)).openOn(map); }, 450);
 }
 function popup(i) {
   const r = R[i], ly = D.layers[r[9]], pl = place(r), st = ST[r[7].slice(0, 2)] || '', ps = parts(r), t = tier(r[2]);
@@ -1520,7 +1672,7 @@ function popup(i) {
     ? `${ly.u}/query?where=${encodeURIComponent(ly.o + '=' + r[10])}&outFields=*&f=html` : ly.u;
   return `<div class="pop"><h3>${esc(title(r))}</h3>
     <div class="where">${esc(CO[r[7]] || '')} County, ${esc(st)} &middot; ${SETTING[r[14]]}</div>${photo(r, 290, 140, 16)}
-    <div class="top"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span><div class="s">bug-out score out of 100</div></span></div>${whyHtml(r)}
+    <div class="top"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span><span class="tier" style="color:${tcol(r[2])}">${t[0]}</span><div class="s">bug-out score out of 100</div></span></div>${whyHtml(r)}${badges(r)}
     <div class="brk">${D.parts.map((p, k) => `<span title="${esc(PART_HELP[p])}">${PART_LABEL[p]}</span><span class="trk"><i style="width:${ps[k] / D.part_max[k] * 100}%;background:var(--p-${p})"></i></span><span class="pt">${ps[k]}/${D.part_max[k]}</span>`).join('')}</div>
     <dl><dt>Water</dt><dd>${esc(water(r)) || 'None mapped within a mile'}</dd>
     <dt>Public land</dt><dd>${esc(pub(r)) || 'None within two miles'}${r[29] >= 0 ? `<br><span class="s">${esc(D.kinds[r[31]] || '')}</span>` : ''}</dd>
@@ -1834,7 +1986,7 @@ let pubOn = false, pubLayer = null, pubSeq = 0, pubTimer = null;
 function legend() {
   $('legend').innerHTML = [['prime', 'Prime 80+'], ['strong', 'Strong 65+'], ['viable', 'Viable 50+'], ['low', 'Marginal']]
     .map(([k, t]) => `<span><i class="dot" style="background:var(--t-${k})"></i>${t}</span>`).join('')
-    + (mode === 'heat' && map.getZoom() < 13 ? '<span><i class="sw" style="width:34px;background:linear-gradient(90deg,#3f5a2a,#8fa33a,#f2a33a,#fff0c2)"></i>Glow: more and better sites</span>' : '')
+    + (mode === 'heat' && map.getZoom() < 13 ? '<span><i class="sw" style="width:34px;background:linear-gradient(90deg,#3b4526,#8a9a4b,#c2a878,#e8641b,#fff1dc)"></i>Glow: more and better sites</span>' : '')
     + (pubOn ? (map.getZoom() < 7 ? '<span>Zoom in to see public land</span>'
       : [['fs', 'National forest'], ['blm', 'BLM'], ['nps', 'National park'], ['fws', 'Refuge'], ['state', 'State park or forest']]
         .concat([['game', 'State game land']]).map(([k, t]) => `<span><i class="sw" style="background:var(--l-${k})"></i>${t}</span>`).join('')) : '')
@@ -2099,7 +2251,7 @@ function table() {
   $('rows').innerHTML = inView.slice(page * PAGE, page * PAGE + PAGE).map(i => { const r = R[i], t = tier(r[2]);
     return `<tr data-i="${i}"><td><div class="score"><span class="v" style="color:${tcol(r[2])}">${r[2]}</span><span class="tier" title="${TIER_HELP[t[0]]}" style="color:${tcol(r[2])}">${t[0]}</span>${bar(r)}</div></td>
       ${TILES ? `<td class="pic">${photo(r, 96, 64, 15)}</td>` : ''}
-      <td class="site"><div class="t1">${esc(title(r))}${r[49] > 0 ? ` <span class="s">&middot; ${r[49] >= 10 ? fmt(Math.round(r[49])) : r[49]} ac</span>` : ''}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${pid(r) && r[5] ? `<div class="s id">${esc(pid(r))}</div>` : ''}${whyHtml(r)}
+      <td class="site"><div class="t1">${esc(title(r))}${r[49] > 0 ? ` <span class="s">&middot; ${r[49] >= 10 ? fmt(Math.round(r[49])) : r[49]} ac</span>` : ''}</div><div class="s">${esc(D.cities[r[15]] ? 'near ' + D.cities[r[15]] + ' · ' : '')}${esc(place(r))} &middot; ${SETTING[r[14]]}</div>${pid(r) && r[5] ? `<div class="s id">${esc(pid(r))}</div>` : ''}${whyHtml(r)}${badges(r)}
         <div class="planbtns"><button data-details="${i}">Details</button><span>Add to plan:</span>${TIERS.map((t, k) => `<button data-tier="${k}" data-i="${i}">${t.name}</button>`).join('')}</div></td>
       <td class="more">${esc(water(r)) || '<span class="s">no water within 1 mi</span>'}<div class="s" style="margin-top:3px">${esc(pub(r)) || 'no public land within 2 mi'}</div>${hunt(r) && hunt(r) !== pub(r) ? `<div class="s">Hunting: ${esc(hunt(r))}</div>` : ''}${clim(r) ? `<div class="s" style="margin-top:3px">${esc(clim(r))}</div>` : ''}</td>
       <td class="more">${hazChips(r)}</td><td class="more">${bldg(r)}<div class="s" style="margin-top:3px">${esc(town(r))}</div><div class="s">${esc(hosp(r))}</div></td>

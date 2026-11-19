@@ -4,8 +4,8 @@
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "background_color": "#11140e",
- "theme_color": "#11140e",
+ "background_color": "#0d0e0e",
+ "theme_color": "#0d0e0e",
  "description": "Survival site location engine for when SHTF.",
  "icons": [
   {
